@@ -180,6 +180,7 @@ nav.tab-bar button.active::before {
   flex: 1;
   min-height: 0;
 }
+#map-container .leaflet-tile-pane { opacity: 0.5; }
 
 /* Leaflet popup */
 .leaflet-popup-content-wrapper {
@@ -973,17 +974,27 @@ function updateMapMarkers() {
       }
     });
 
-    entries.forEach(({ place, slot, memo }) => {
+    entries.forEach(({ place, slot, memo }, idx) => {
+      const num = idx + 1;
       const icon = L.divIcon({
         className: '',
-        html: `<div style="
-          width:28px;height:28px;border-radius:50%;
-          background:${color};border:2px solid #fff;
-          display:flex;align-items:center;justify-content:center;
-          font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.4);
-        ">${place.emoji}</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        html: `<div style="position:relative;width:32px;height:32px;">
+          <div style="width:32px;height:32px;border-radius:50%;
+            background:${color};border:2px solid #fff;
+            display:flex;align-items:center;justify-content:center;
+            font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,.5);
+          ">${place.emoji}</div>
+          <div style="position:absolute;top:-6px;right:-6px;
+            width:18px;height:18px;border-radius:50%;
+            background:#fff;color:${color};
+            font-size:10px;font-weight:900;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 1px 4px rgba(0,0,0,.3);
+            font-family:'Noto Sans KR',sans-serif;
+          ">${num}</div>
+        </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
       });
 
       const marker = L.marker([place.lat, place.lng], { icon }).addTo(map);
@@ -1000,7 +1011,7 @@ function updateMapMarkers() {
     });
 
     if (dayPoints.length > 1) {
-      const line = L.polyline(dayPoints, { color, weight: 3, opacity: 0.6, dashArray: '8,6' }).addTo(map);
+      const line = L.polyline(dayPoints, { color, weight: 5, opacity: 0.9 }).addTo(map);
       mapLines.push(line);
     }
   });
