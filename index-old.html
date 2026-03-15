@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>윤태환의 대만 여행기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f5f3ef;
+  --card: #ffffff;
+  --card-hover: #f0ede8;
+  --red: #e8312a;
+  --gold: #d4a017;
+  --text: #1a1a1a;
+  --text-dim: #777;
+  --blue: #4a90e2;
+  --green: #52c97a;
+  --orange: #f5a623;
+  --gray: #9b9b9b;
+  --border: rgba(0,0,0,.08);
+  --radius: 10px;
+  --nav-h: 64px;
+  --header-h: 52px;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Header ── */
+header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: linear-gradient(135deg, #b71c1c 0%, #c62828 50%, #d32f2f 100%);
+  border-bottom: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1000;
+  box-shadow: 0 2px 12px rgba(183,28,28,.2);
+}
+
+header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--red), var(--gold), var(--red));
+  opacity: .7;
+}
+
+.header-title {
+  font-family: 'Dela Gothic One', cursive;
+  font-size: 15px;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.header-right {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px;
+}
+
+.tw-time {
+  color: rgba(255,255,255,.8);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+
+.btn-copy {
+  background: rgba(255,255,255,.2);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.btn-copy:active { transform: scale(.95); background: rgba(255,255,255,.35); }
+
+/* ── Tab bar ── */
+nav.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  background: #fff;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -2px 10px rgba(0,0,0,.04);
+}
+
+nav.tab-bar button {
+  flex: 1;
+  background: none; border: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 10px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: color .2s;
+  position: relative;
+}
+
+nav.tab-bar button .tab-icon { font-size: 22px; line-height: 1; }
+
+nav.tab-bar button.active {
+  color: var(--red);
+}
+
+nav.tab-bar button.active::before {
+  content: '';
+  position: absolute; top: 0; left: 25%; right: 25%;
+  height: 2px;
+  background: var(--red);
+  border-radius: 0 0 2px 2px;
+  box-shadow: 0 0 10px var(--red);
+}
+
+/* ── Main content ── */
+.tab-content {
+  position: fixed;
+  top: var(--header-h);
+  bottom: var(--nav-h);
+  left: 0; right: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-content.active { display: block; }
+
+/* ── Map tab ── */
+#tab-map { display: none; }
+#tab-map.active { display: flex; flex-direction: column; }
+
+.map-date-bar {
+  display: flex; gap: 6px;
+  padding: 10px 12px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.map-date-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+}
+.map-date-btn.active {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+  box-shadow: 0 2px 8px rgba(232,49,42,.2);
+}
+
+#map-container {
+  flex: 1;
+  min-height: 0;
+}
+#map-container .leaflet-tile-pane { opacity: 0.5; }
+
+/* Leaflet popup */
+.leaflet-popup-content-wrapper {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,.12) !important;
+}
+.leaflet-popup-tip { background: var(--card) !important; }
+.leaflet-popup-content { margin: 10px 14px !important; font-size: 13px !important; font-family: 'Noto Sans KR', sans-serif !important; }
+.popup-title { font-weight: 700; margin-bottom: 6px; }
+.popup-gmaps {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  background: var(--red);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 11px;
+  text-decoration: none;
+}
+
+/* ── Schedule tab ── */
+.schedule-wrap {
+  overflow-x: auto;
+  padding: 12px;
+  min-height: 100%;
+}
+
+.schedule-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+}
+
+.schedule-table th {
+  position: sticky; top: 0;
+  background: var(--bg);
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-align: center;
+  z-index: 2;
+  min-width: 120px;
+}
+
+.schedule-table th.time-col {
+  min-width: 50px;
+  width: 50px;
+}
+
+.schedule-table th .day-date {
+  font-family: 'Dela Gothic One', cursive;
+  font-size: 14px;
+  color: var(--text);
+  display: block;
+}
+
+.schedule-table td {
+  border: 1px solid var(--border);
+  padding: 4px;
+  vertical-align: top;
+  min-height: 44px;
+  min-width: 120px;
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.schedule-table td:hover {
+  background: rgba(0,0,0,.02);
+}
+
+.schedule-table td.time-cell {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  cursor: default;
+  min-width: 50px;
+  width: 50px;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+  border: none;
+}
+
+.sched-card {
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11px;
+  margin-bottom: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-left: 3px solid var(--text-dim);
+  transition: background .15s;
+  position: relative;
+}
+.sched-card:hover { background: #eae7e1; }
+.sched-card .sc-emoji { font-size: 13px; flex-shrink: 0; }
+.sched-card .sc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.sched-card .sc-memo { font-size: 9px; color: var(--text-dim); display: block; margin-top: 1px; }
+
+/* ── Places tab ── */
+.places-wrap {
+  padding: 12px;
+}
+
+.filter-bar {
+  display: flex; gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  flex-wrap: nowrap;
+}
+
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+}
+.filter-btn.active {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
+.places-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.place-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px;
+  border: 1px solid var(--border);
+  transition: all .2s;
+  display: flex; flex-direction: column; gap: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+.place-card:hover { border-color: rgba(0,0,0,.15); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+
+.place-card .pc-top {
+  display: flex; align-items: center; gap: 6px;
+}
+.place-card .pc-emoji { font-size: 20px; }
+.place-card .pc-name { font-size: 12px; font-weight: 500; line-height: 1.3; flex: 1; }
+
+.place-card .pc-cat {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.place-card .pc-actions {
+  display: flex; gap: 4px; margin-top: auto;
+}
+
+.pc-btn {
+  flex: 1;
+  padding: 5px 0;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  text-align: center;
+}
+.pc-btn:active { transform: scale(.96); }
+.pc-btn.danger { color: #d32f2f; border-color: rgba(211,47,47,.2); }
+.pc-btn.danger:hover { background: rgba(211,47,47,.06); }
+
+.add-place-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 2px dashed rgba(0,0,0,.12);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.add-place-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* ── Memo tab ── */
+.memo-wrap { padding: 12px; }
+
+.memo-date-bar {
+  display: flex; gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+
+.memo-date-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+}
+.memo-date-btn.active {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
+.memo-textarea {
+  width: 100%;
+  min-height: calc(100vh - var(--header-h) - var(--nav-h) - 80px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  padding: 14px;
+  resize: none;
+  outline: none;
+  line-height: 1.7;
+}
+.memo-textarea:focus { border-color: var(--red); }
+.memo-textarea::placeholder { color: var(--text-dim); }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.4);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+.modal-sheet {
+  background: var(--card);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px 16px;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.32,.72,0,1);
+  box-shadow: 0 -4px 30px rgba(0,0,0,.12);
+}
+.modal-overlay.show .modal-sheet { transform: translateY(0); }
+
+.modal-handle {
+  width: 36px; height: 4px;
+  background: rgba(0,0,0,.12);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.modal-title {
+  font-family: 'Dela Gothic One', cursive;
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: var(--red);
+}
+
+.modal-field { margin-bottom: 12px; }
+.modal-field label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.modal-field input, .modal-field select, .modal-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus {
+  border-color: var(--red);
+}
+.modal-field select { cursor: pointer; }
+.modal-field select option { background: var(--bg); }
+
+.modal-actions {
+  display: flex; gap: 8px;
+  margin-top: 16px;
+}
+
+.modal-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+}
+.modal-btn.primary { background: var(--red); color: #fff; }
+.modal-btn.primary:active { transform: scale(.97); }
+.modal-btn.secondary { background: var(--bg); color: var(--text-dim); }
+
+/* Place picker inside modal */
+.place-picker-list {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.place-pick-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.place-pick-item:hover { background: var(--bg); }
+.place-pick-item .ppi-emoji { font-size: 22px; }
+.place-pick-item .ppi-name { font-size: 13px; flex: 1; }
+.place-pick-item .ppi-cat { font-size: 10px; color: var(--text-dim); }
+
+/* Schedule card detail modal */
+.card-detail-modal .cd-place {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.card-detail-modal .cd-actions {
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.cd-action-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: all .15s;
+}
+.cd-action-btn:hover { background: #eae7e1; }
+.cd-action-btn.danger { color: #d32f2f; border-color: rgba(211,47,47,.2); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 2px; }
+
+.schedule-table td.half-hour,
+.schedule-table td.time-cell.half-hour {
+  border-top-style: dashed;
+  border-top-color: rgba(0,0,0,.04);
+}
+.schedule-table td.time-cell.half-hour {
+  font-size: 10px;
+  color: #aaa;
+}
+
+.dist-measure-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+  margin-left: auto;
+}
+.dist-measure-btn.active {
+  background: var(--gold);
+  color: #000;
+  border-color: var(--gold);
+}
+
+/* Schedule add-place modal filter */
+.modal-filter-bar {
+  display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; flex-wrap: nowrap;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">윤태환의 대만 여행기</div>
+  <div class="header-right">
+    <span class="tw-time" id="twTime"></span>
+    <button class="btn-copy" id="btnCopy" onclick="copyLink()">링크 복사</button>
+  </div>
+</header>
+
+<!-- Map -->
+<div class="tab-content active" id="tab-map">
+  <div class="map-date-bar" id="mapDateBar"></div>
+  <div id="distanceBar" style="display:none;padding:8px 12px;background:#fff3cd;font-size:12px;border-bottom:1px solid var(--border);flex-shrink:0"></div>
+  <div id="map-container"></div>
+</div>
+
+<!-- Schedule -->
+<div class="tab-content" id="tab-schedule">
+  <div class="schedule-wrap" id="scheduleWrap"></div>
+</div>
+
+<!-- Places -->
+<div class="tab-content" id="tab-places">
+  <div class="places-wrap" id="placesWrap"></div>
+</div>
+
+<!-- Memo -->
+<div class="tab-content" id="tab-memo">
+  <div class="memo-wrap" id="memoWrap"></div>
+</div>
+
+<!-- Tab bar -->
+<nav class="tab-bar">
+  <button class="active" data-tab="tab-map"><span class="tab-icon">🗺️</span>지도</button>
+  <button data-tab="tab-schedule"><span class="tab-icon">📅</span>스케줄</button>
+  <button data-tab="tab-places"><span class="tab-icon">📍</span>장소</button>
+  <button data-tab="tab-memo"><span class="tab-icon">📝</span>메모</button>
+</nav>
+
+<!-- Modal container -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
+  <div class="modal-sheet" id="modalSheet"></div>
+</div>
+
+<script>
+// ─── Data ───
+const DATES = ['0319','0320','0321','0322'];
+const DATE_LABELS = { '0319':'3/19 수', '0320':'3/20 목', '0321':'3/21 금', '0322':'3/22 토' };
+const DATE_SHORT = { '0319':'3/19', '0320':'3/20', '0321':'3/21', '0322':'3/22' };
+const DATE_COLORS = { '0319':'#e8312a', '0320':'#4a90e2', '0321':'#52c97a', '0322':'#f5c842' };
+const TIME_SLOTS = [];
+for (let h = 6; h <= 23; h++) {
+  TIME_SLOTS.push(h + ':00');
+  TIME_SLOTS.push(h + ':30');
+}
+// Slot keys use "HH:MM" format, e.g. "0319_6:00", "0319_6:30"
+
+const CATEGORY_STYLE = {
+  hotel:     { color: '#4a90e2', label: '숙소' },
+  food:      { color: '#f5a623', label: '음식' },
+  sight:     { color: '#52c97a', label: '관광' },
+  transport: { color: '#9b9b9b', label: '교통' },
+};
+
+const CATEGORY_EMOJI = { hotel:'🏨', food:'🍜', sight:'🗺️', transport:'🚇' };
+
+// 구(district) 정렬 순서
+const DISTRICT_ORDER = ['타오위안','신반','신베이시','완화구','중정구','중산구','다안구','다퉁구','신이구','쑹산구','스린구','단수이구'];
+
+const PRESET_PLACES = [
+  // ── 타오위안 ──
+  { id:'p1', name:'타오위안 국제공항', category:'transport', emoji:'✈️', district:'타오위안', desc:'전자 입출국 삼일전!!!', mapUrl:'https://maps.app.goo.gl/7k2Ldi21Rf7hEcNd9', lat:25.0797, lng:121.2342 },
+  // ── 신반 ──
+  { id:'p2', name:'힐튼 호텔', category:'hotel', emoji:'🏨', district:'신반', desc:'첫날 묶을 호텔', mapUrl:'https://maps.app.goo.gl/QTxCEagG3aFuFQ7FA?g_st=ic', lat:25.0146, lng:121.4654 },
+  { id:'p3', name:'반챠오 난야 야시장', category:'sight', emoji:'🌃', district:'신반', desc:'', mapUrl:'https://maps.app.goo.gl/QGJ4DcLPvL53oJ3A9', lat:25.0133, lng:121.4591 },
+  { id:'p4', name:'첫날 꼬치 맥주집 品都串燒攤', category:'food', emoji:'🍢', district:'신반', desc:'', mapUrl:'https://maps.app.goo.gl/1dWZSkrcT7tV5DcZA', lat:25.0138, lng:121.4643 },
+  { id:'p5', name:'딘타이펑(신반)', category:'food', emoji:'🥟', district:'신반', desc:'', mapUrl:'https://maps.app.goo.gl/tuxswmWX4WaRCGQd9', lat:25.0140, lng:121.4635 },
+  // ── 신베이시 ──
+  { id:'p6', name:'지우펀', category:'sight', emoji:'🏮', district:'신베이시', desc:'옛 금광 마을로 붉은 등불이 켜지는 좁은 골목길과 찻집이 영화 속 장면 같은 낭만적인 풍경을 선사함', mapUrl:'https://www.google.com/maps/search/?api=1&query=九份老街', lat:25.1094, lng:121.8443 },
+  // ── 완화구 ──
+  { id:'p7', name:'용산사', category:'sight', emoji:'🛕', district:'완화구', desc:'8세기 중반에 세워진 타이베이에서 가장 오래된 사찰로 불교, 도교, 민간신앙이 공존하며 관세음보살상이 영험하기로 유명함', mapUrl:'https://www.google.com/maps/search/?api=1&query=龍山寺+taipei', lat:25.0373, lng:121.4998 },
+  { id:'p8', name:'보피라오 역사거리', category:'sight', emoji:'🏚️', district:'완화구', desc:'붉은 벽돌과 아치형 기둥이 이어지는 1930년대 올드 타이베이 정취를 간직한 과거 목재 무역의 중심지', mapUrl:'https://www.google.com/maps/search/?api=1&query=剝皮寮歷史街區', lat:25.0375, lng:121.5017 },
+  { id:'p9', name:'시먼딩', category:'sight', emoji:'🛍️', district:'완화구', desc:'타이베이의 명동으로 불리는 젊은 문화와 패션, 먹거리의 중심지로 랜드마크인 서문홍루가 자리하고 있음', mapUrl:'https://www.google.com/maps/search/?api=1&query=西門町', lat:25.0423, lng:121.5081 },
+  { id:'p10', name:'진천미', category:'food', emoji:'🍜', district:'완화구', desc:'', mapUrl:'https://maps.app.goo.gl/41ew7G14UMgrGkHy8', lat:25.0380, lng:121.5000 },
+  // ── 중정구 ──
+  { id:'p11', name:'국립 대만 박물관', category:'sight', emoji:'🏛️', district:'중정구', desc:'1908년 설립된 대만 최초의 국립 박물관으로 신고전주의 양식의 건물 안에서 대만의 역사와 자연사를 관람할 수 있음', mapUrl:'https://www.google.com/maps/search/?api=1&query=國立臺灣博物館', lat:25.0430, lng:121.5150 },
+  { id:'p12', name:'228 평화기념 공원', category:'sight', emoji:'🌳', district:'중정구', desc:'228 사건 희생자를 기리는 공원으로, 도심 속 평화로운 연못과 산책길이 어우러진 휴식처', mapUrl:'https://www.google.com/maps/search/?api=1&query=二二八和平紀念公園', lat:25.0418, lng:121.5152 },
+  { id:'p13', name:'대만 총통부', category:'sight', emoji:'🏢', district:'중정구', desc:'일제강점기 총독부 청사로 지어진 행정 중심지로 평일 오전에 일부 구역이 일반에 개방됨', mapUrl:'https://www.google.com/maps/search/?api=1&query=總統府+taipei', lat:25.0400, lng:121.5118 },
+  { id:'p14', name:'타이베이 식물원', category:'sight', emoji:'🌿', district:'중정구', desc:'2천 종 이상의 식물이 있는 도심 속 오아시스로 일본식 목조건물인 남먼딩 323과 연꽃 연못이 있음', mapUrl:'https://www.google.com/maps/search/?api=1&query=台北植物園', lat:25.0320, lng:121.5100 },
+  { id:'p15', name:'중정 기념당', category:'sight', emoji:'🏛️', district:'중정구', desc:'장제스 전 총통을 추모하기 위해 세워진 역사적 랜드마크로 웅장한 아치와 푸른 지붕의 대리석 건물이 특징임', mapUrl:'https://www.google.com/maps/search/?api=1&query=中正紀念堂', lat:25.0350, lng:121.5218 },
+  // ── 다안구 ──
+  { id:'p16', name:'융캉제', category:'sight', emoji:'🍽️', district:'다안구', desc:'딘타이펑 본점이 위치한 대표적인 미식거리로 전통 음식과 감각적인 카페, 편집샵이 공존함', mapUrl:'https://www.google.com/maps/search/?api=1&query=永康街+taipei', lat:25.0330, lng:121.5290 },
+  // ── 중산구 ──
+  { id:'p17', name:'코지 호텔', category:'hotel', emoji:'🏨', district:'중산구', desc:'둘,셋째날 묵을 호텔', mapUrl:'https://maps.app.goo.gl/2amRk6TZx8ZgDRaPA?g_st=ic', lat:25.0528, lng:121.5210 },
+  { id:'p18', name:'신트랜드', category:'sight', emoji:'🎮', district:'중산구', desc:'최신 디지털 기기와 게임, 피규어 등이 입점한 IT 중심 복합 쇼핑몰로 타이베이의 아키하바라로 불림', mapUrl:'https://www.google.com/maps/search/?api=1&query=三創生活+taipei', lat:25.0445, lng:121.5320 },
+  { id:'p19', name:'화산 1914 창의문화 원구', category:'sight', emoji:'🎨', district:'중산구', desc:'옛 양조장을 개조한 복합문화공간으로 빈티지한 벽돌 건물과 예술가들의 감성이 어우러진 포토스팟', mapUrl:'https://www.google.com/maps/search/?api=1&query=華山1914文化創意產業園區', lat:25.0440, lng:121.5295 },
+  { id:'p20', name:'중산 선형 공원', category:'sight', emoji:'🌲', district:'중산구', desc:'도심 속 예술 작품과 상점이 어우러진 산책로이며, 인근 치펑제 골목은 젊은 층이 선호하는 트렌디한 거리임', mapUrl:'https://www.google.com/maps/search/?api=1&query=中山線形公園', lat:25.0530, lng:121.5230 },
+  // ── 다퉁구 ──
+  { id:'p21', name:'닝샤 야시장', category:'sight', emoji:'🌃', district:'다퉁구', desc:'규모는 작지만 미슐랭 빕구르망 선정 노점이 있는 등 현지인들이 즐겨 찾는 알찬 미식 야시장', mapUrl:'https://www.google.com/maps/search/?api=1&query=寧夏夜市', lat:25.0558, lng:121.5155 },
+  // ── 신이구 ──
+  { id:'p22', name:'신이 쇼핑 거리', category:'sight', emoji:'🛒', district:'신이구', desc:'백화점들이 스카이워크로 연결된 타이베이 최대 쇼핑 지구로 화려한 도시 라이프스타일의 중심지', mapUrl:'https://www.google.com/maps/search/?api=1&query=信義商圈', lat:25.0360, lng:121.5670 },
+  { id:'p23', name:'타이베이 101', category:'sight', emoji:'🏙️', district:'신이구', desc:'대나무 마디 모양의 독특한 외관을 가진 상징적 빌딩으로 89층과 91층에 전망대가 있음', mapUrl:'https://maps.app.goo.gl/hjYppKbWJZndz5jy6', lat:25.0340, lng:121.5645 },
+  { id:'p24', name:'스스남촌', category:'sight', emoji:'🏘️', district:'신이구', desc:'과거 군인 가족 거주지를 개조한 문화공간으로 현대적인 빌딩 숲 사이에서 빈티지한 대비를 이룸', mapUrl:'https://www.google.com/maps/search/?api=1&query=四四南村', lat:25.0315, lng:121.5625 },
+  { id:'p25', name:'샹산역 (101타워 뷰)', category:'sight', emoji:'⛰️', district:'신이구', desc:'101타워를 산에서 보는 곳', mapUrl:'https://maps.app.goo.gl/KqVzTx5QTxKBh6Lv5', lat:25.0270, lng:121.5710 },
+  { id:'p26', name:'송인거리 (101타워 뷰)', category:'sight', emoji:'📸', district:'신이구', desc:'101타워를 길거리에서 보는 곳', mapUrl:'https://maps.app.goo.gl/ozEftrc2zMogu58g6', lat:25.0345, lng:121.5680 },
+  // ── 쑹산구 ──
+  { id:'p27', name:'타이베이돔', category:'sight', emoji:'🏟️', district:'쑹산구', desc:'2023년 완공된 초대형 돔구장으로 경기장과 쇼핑몰, 레스토랑이 연결된 복합 엔터테인먼트 공간', mapUrl:'https://www.google.com/maps/search/?api=1&query=台北大巨蛋', lat:25.0445, lng:121.5555 },
+  { id:'p28', name:'숭산문화 창의 공원', category:'sight', emoji:'🎭', district:'쑹산구', desc:'옛 담배 공장을 리모델링하여 디자인 전시, 팝업 스토어, 카페 등이 들어선 예술적 휴식처', mapUrl:'https://www.google.com/maps/search/?api=1&query=松山文創園區', lat:25.0440, lng:121.5600 },
+  { id:'p29', name:'라오허제 야시장', category:'sight', emoji:'🌃', district:'쑹산구', desc:'타이베이에서 가장 오래된 야시장 중 하나로 입구의 후초병(호자우빙)이 명물임', mapUrl:'https://www.google.com/maps/search/?api=1&query=饒河街觀光夜市', lat:25.0513, lng:121.5775 },
+  { id:'p30', name:'숭산 치유궁', category:'sight', emoji:'🛕', district:'쑹산구', desc:'바다의 여신 마주를 모신 화려한 도교 사원으로 야시장 입구의 랜드마크 역할을 함', mapUrl:'https://www.google.com/maps/search/?api=1&query=松山慈祐宮', lat:25.0510, lng:121.5770 },
+  // ── 스린구 ──
+  { id:'p31', name:'스린 야시장', category:'sight', emoji:'🌃', district:'스린구', desc:'100년 이상의 역사를 가진 타이베이 최대 야시장으로 대왕오징어, 굴전 등 온갖 길거리 음식이 모여 있음', mapUrl:'https://www.google.com/maps/search/?api=1&query=士林夜市', lat:25.0882, lng:121.5241 },
+  { id:'p32', name:'국립 고궁 박물원', category:'sight', emoji:'🏺', district:'스린구', desc:'아시아 최대 규모의 박물관으로 취옥백채와 육형석 등 진귀한 중국 황실 유물을 소장함', mapUrl:'https://www.google.com/maps/search/?api=1&query=國立故宮博物院', lat:25.1024, lng:121.5485 },
+  // ── 단수이구 ──
+  { id:'p33', name:'홍마오청/소백궁/진리대학교', category:'sight', emoji:'🏰', district:'단수이구', desc:'붉은 벽돌의 요새와 서양식 관저, 영화 촬영지로 유명한 캠퍼스가 어우러진 이국적인 노을 명소', mapUrl:'https://www.google.com/maps/search/?api=1&query=淡水紅毛城', lat:25.1750, lng:121.4320 },
+  { id:'p34', name:'스펀지 케익 緣味古早味現烤蛋糕', category:'food', emoji:'🍰', district:'단수이구', desc:'', mapUrl:'https://maps.app.goo.gl/Ckv8xLmwYSPPdWE47', lat:25.1690, lng:121.4410 },
+];
+
+// ─── State ───
+let state = {
+  schedule: {},
+  customPlaces: [],
+  hiddenPlaces: [],
+  placeEdits: {},
+  memos: { '0319':'', '0320':'', '0321':'', '0322':'', 'common':`19일 첫날, 목욜:
+👉고급호텔 체크인 (종환 13:30, 태원 14:30)
+👉딘타이펑 (15:00~16:00)
+👉시먼딩 투어 (16:00~18:00)
+👉호캉스 (19:00~21:00)
+👉신반 난양야시장 투어, 品都串燒攤 板橋 맥주 한잔 (21:30~22:30)
+👉호텔 복귀 및 취침 (23:00)
+
+20일 둘째날, 금욜:
+👉헬스 (7:00)
+👉힐튼 호텔 아점 (9:00)
+👉민솅 호텔 얼리 체크인 (10:00)
+👉타이베이 시내 관광 (10:00~18:00)
+시먼딩 근처 赤峰街 Chifeng St. : MZ 감성 (10:00~13:00)
+중간 호텔 복귀 재정비(가벼운 운동 복장)
+신의구 타이베이 101, 송인 및 샹산 (16:00~20:00)
+👉저녁 식사
+👉저녁 길거리 투어
+👉호텔 복귀 및 취침 (22:00)
+
+21일 셋째날, 토욜:
+👉헬스 (7:00)
+👉호텔 조식 (8:00)
+👉타이베이 시외 관광
+단수이(https://www.youtube.com/watch?v=KZnLhf8lZCk) 참고
+점심 흑전반점, 자전거 대여(1시간), 쓰린 야시장
+👉호텔 복귀
+
+22일 넷째날, 일욜:
+👉헬스 (6:00)
+👉호텔 조식 (7:00)
+👉카르푸 이니씨&가족들 선물사기 (9:00)
+👉공항 출발 (9:30)
+👉귀국 (종환 12:15, 태원 13:55)` }
+};
+
+function allPlaces() {
+  const hidden = new Set(state.hiddenPlaces || []);
+  const edits = state.placeEdits || {};
+  return [...PRESET_PLACES.filter(p => !hidden.has(p.id)).map(p => {
+    const e = edits[p.id];
+    return e ? { ...p, ...e } : p;
+  }), ...state.customPlaces];
+}
+
+function findPlace(id) {
+  return allPlaces().find(p => p.id === id);
+}
+
+function saveToUrl() {
+  try {
+    const json = JSON.stringify(state);
+    const encoded = btoa(unescape(encodeURIComponent(json)));
+    history.replaceState(null, '', '#' + encoded);
+  } catch(e) { console.error('Save error', e); }
+}
+
+function loadFromUrl() {
+  const hash = location.hash.slice(1);
+  if (!hash) return null;
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(hash))));
+  } catch { return null; }
+}
+
+function initState() {
+  const saved = loadFromUrl();
+  if (saved) {
+    state.schedule = saved.schedule || {};
+    state.customPlaces = saved.customPlaces || [];
+    state.hiddenPlaces = saved.hiddenPlaces || [];
+    state.placeEdits = saved.placeEdits || {};
+    state.memos = { '0319':'', '0320':'', '0321':'', '0322':'', 'common':'', ...(saved.memos || {}) };
+  }
+}
+
+// ─── Taiwan Time ───
+function updateTWTime() {
+  const now = new Date();
+  const tw = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+  const h = String(tw.getHours()).padStart(2, '0');
+  const m = String(tw.getMinutes()).padStart(2, '0');
+  document.getElementById('twTime').textContent = `대만 ${h}:${m}`;
+}
+
+// ─── Copy Link ───
+function copyLink() {
+  saveToUrl();
+  navigator.clipboard.writeText(location.href).then(() => {
+    const btn = document.getElementById('btnCopy');
+    btn.textContent = '복사됨!';
+    setTimeout(() => { btn.textContent = '링크 복사'; }, 2000);
+  });
+}
+
+// ─── Tab switching ───
+let currentTab = 'tab-map';
+document.querySelectorAll('.tab-bar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const tabId = btn.dataset.tab;
+    document.getElementById(tabId).classList.add('active');
+    currentTab = tabId;
+    if (tabId === 'tab-map' && map) {
+      setTimeout(() => map.invalidateSize(), 100);
+      updateMapMarkers();
+    }
+    if (tabId === 'tab-schedule') renderSchedule();
+    if (tabId === 'tab-places') renderPlaces();
+    if (tabId === 'tab-memo') renderMemo();
+  });
+});
+
+// ─── Modal ───
+function openModal(html) {
+  const overlay = document.getElementById('modalOverlay');
+  document.getElementById('modalSheet').innerHTML = '<div class="modal-handle"></div>' + html;
+  requestAnimationFrame(() => overlay.classList.add('show'));
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function closeModalOnBg(e) {
+  if (e.target === e.currentTarget) closeModal();
+}
+
+// ─── MAP ───
+let map, mapMarkers = [], mapLines = [], selectedMapDate = 'all';
+let distMode = false, distPoints = [], distLine = null, distMarkerIcons = [];
+
+function toggleDistMode() {
+  distMode = !distMode;
+  const btn = document.getElementById('distModeBtn');
+  btn.classList.toggle('active', distMode);
+  btn.textContent = distMode ? '거리 측정 ON' : '거리 측정';
+  distPoints = [];
+  if (distLine) { map.removeLayer(distLine); distLine = null; }
+  document.getElementById('distanceBar').style.display = 'none';
+  document.getElementById('distanceBar').textContent = '';
+}
+
+function handleDistClick(latlng, placeName) {
+  if (!distMode) return;
+  distPoints.push({ latlng, name: placeName });
+  if (distPoints.length === 2) {
+    const [a, b] = distPoints;
+    const dist = map.distance(a.latlng, b.latlng);
+    let distStr = dist >= 1000 ? (dist/1000).toFixed(2) + ' km' : Math.round(dist) + ' m';
+    if (distLine) map.removeLayer(distLine);
+    distLine = L.polyline([a.latlng, b.latlng], { color: '#e8312a', weight: 2, dashArray: '6,4' }).addTo(map);
+    const bar = document.getElementById('distanceBar');
+    bar.style.display = 'block';
+    bar.innerHTML = `<b>${a.name}</b> ↔ <b>${b.name}</b> : 직선 <b>${distStr}</b> <button onclick="clearDist()" style="margin-left:8px;border:none;background:none;color:var(--red);cursor:pointer;font-family:inherit">초기화</button>`;
+    distPoints = [];
+  } else {
+    const bar = document.getElementById('distanceBar');
+    bar.style.display = 'block';
+    bar.textContent = `${distPoints[0].name} 선택됨 — 두 번째 장소를 클릭하세요`;
+  }
+}
+
+function clearDist() {
+  distPoints = [];
+  if (distLine) { map.removeLayer(distLine); distLine = null; }
+  document.getElementById('distanceBar').style.display = 'none';
+}
+
+function initMap() {
+  map = L.map('map-container', { zoomControl: false }).setView([25.033, 121.565], 12);
+  L.control.zoom({ position: 'topright' }).addTo(map);
+  L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
+    attribution: '&copy; Google Maps',
+    maxZoom: 20,
+    subdomains: ['mt0','mt1','mt2','mt3']
+  }).addTo(map);
+
+  // Date buttons
+  const bar = document.getElementById('mapDateBar');
+  const allBtn = document.createElement('button');
+  allBtn.className = 'map-date-btn active';
+  allBtn.textContent = '전체';
+  allBtn.onclick = () => { selectedMapDate = 'all'; updateMapDateBtns(); updateMapMarkers(); };
+  bar.appendChild(allBtn);
+
+  DATES.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'map-date-btn';
+    btn.textContent = DATE_SHORT[d];
+    btn.style.setProperty('--dc', DATE_COLORS[d]);
+    btn.onclick = () => { selectedMapDate = d; updateMapDateBtns(); updateMapMarkers(); };
+    bar.appendChild(btn);
+  });
+
+  const distBtn = document.createElement('button');
+  distBtn.id = 'distModeBtn';
+  distBtn.className = 'dist-measure-btn';
+  distBtn.textContent = '거리 측정';
+  distBtn.onclick = toggleDistMode;
+  bar.appendChild(distBtn);
+}
+
+function updateMapDateBtns() {
+  document.querySelectorAll('.map-date-btn').forEach((btn, i) => {
+    btn.classList.remove('active');
+    if (i === 0 && selectedMapDate === 'all') btn.classList.add('active');
+    else if (i > 0 && DATES[i-1] === selectedMapDate) {
+      btn.classList.add('active');
+      btn.style.background = DATE_COLORS[selectedMapDate];
+      btn.style.borderColor = DATE_COLORS[selectedMapDate];
+      btn.style.color = '#fff';
+    } else {
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }
+  });
+}
+
+function updateMapMarkers() {
+  mapMarkers.forEach(m => map.removeLayer(m));
+  mapLines.forEach(l => map.removeLayer(l));
+  mapMarkers = [];
+  mapLines = [];
+
+  const datesToShow = selectedMapDate === 'all' ? DATES : [selectedMapDate];
+  const bounds = [];
+
+  datesToShow.forEach(date => {
+    const color = DATE_COLORS[date];
+    const dayPoints = [];
+
+    // Gather schedule entries sorted by time slot
+    const entries = [];
+    TIME_SLOTS.forEach(slot => {
+      const key = date + '_' + slot;
+      if (state.schedule[key]) {
+        state.schedule[key].forEach(item => {
+          const place = findPlace(item.placeId);
+          if (place && place.lat) {
+            entries.push({ place, slot, memo: item.memo });
+          }
+        });
+      }
+    });
+
+    entries.forEach(({ place, slot, memo }, idx) => {
+      const num = idx + 1;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="position:relative;width:32px;height:32px;">
+          <div style="width:32px;height:32px;border-radius:50%;
+            background:${color};border:2px solid #fff;
+            display:flex;align-items:center;justify-content:center;
+            font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,.5);
+          ">${place.emoji}</div>
+          <div style="position:absolute;top:-6px;right:-6px;
+            width:18px;height:18px;border-radius:50%;
+            background:#fff;color:${color};
+            font-size:10px;font-weight:900;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 1px 4px rgba(0,0,0,.3);
+            font-family:'Noto Sans KR',sans-serif;
+          ">${num}</div>
+        </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      const marker = L.marker([place.lat, place.lng], { icon }).addTo(map);
+      marker.bindPopup(`
+        <div class="popup-title">${place.emoji} ${place.name}</div>
+        <div style="color:var(--text-dim);font-size:11px;">${DATE_SHORT[date]} ${slot}</div>
+        ${memo ? `<div style="margin-top:4px;font-size:11px;">${memo}</div>` : ''}
+        <a class="popup-gmaps" href="${place.mapUrl}" target="_blank">📍 구글맵 열기</a>
+      `);
+      marker.on('click', () => handleDistClick(L.latLng(place.lat, place.lng), place.name));
+      mapMarkers.push(marker);
+      dayPoints.push([place.lat, place.lng]);
+      bounds.push([place.lat, place.lng]);
+    });
+
+    if (dayPoints.length > 1) {
+      const line = L.polyline(dayPoints, { color, weight: 5, opacity: 0.9 }).addTo(map);
+      mapLines.push(line);
+    }
+  });
+
+  if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+  }
+}
+
+// ─── SCHEDULE ───
+function renderSchedule() {
+  const wrap = document.getElementById('scheduleWrap');
+  let html = '<table class="schedule-table"><thead><tr><th class="time-col">시간</th>';
+  DATES.forEach(d => {
+    html += `<th><span class="day-date" style="color:${DATE_COLORS[d]}">${DATE_LABELS[d]}</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  TIME_SLOTS.forEach(slot => {
+    const hh = slot.split(':')[0].padStart(2,'0') + ':' + slot.split(':')[1];
+    const isHalf = slot.endsWith(':30');
+    html += `<tr><td class="time-cell${isHalf ? ' half-hour' : ''}">${hh}</td>`;
+    DATES.forEach(d => {
+      const key = d + '_' + slot;
+      const items = state.schedule[key] || [];
+      html += `<td class="${isHalf ? 'half-hour' : ''}" onclick="openPlacePicker('${key}')">`;
+      items.forEach((item, idx) => {
+        const place = findPlace(item.placeId);
+        if (place) {
+          const catColor = CATEGORY_STYLE[place.category]?.color || '#888';
+          html += `<div class="sched-card" style="border-left-color:${catColor}" onclick="event.stopPropagation();openCardDetail('${key}',${idx})">
+            <span class="sc-emoji">${place.emoji}</span>
+            <span class="sc-name">${place.name}</span>
+            ${item.memo ? `<span class="sc-memo">${item.memo}</span>` : ''}
+          </div>`;
+        }
+      });
+      html += '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function openPlacePicker(slotKey) {
+  let filterCat = 'all';
+  function renderList() {
+    const places = allPlaces().filter(p => filterCat === 'all' || p.category === filterCat);
+    return places.map(p => `
+      <div class="place-pick-item" onclick="addToSchedule('${slotKey}','${p.id}')">
+        <span class="ppi-emoji">${p.emoji}</span>
+        <span class="ppi-name">${p.name}</span>
+        <span class="ppi-cat" style="color:${CATEGORY_STYLE[p.category]?.color || '#888'}">${CATEGORY_STYLE[p.category]?.label || ''}</span>
+      </div>
+    `).join('');
+  }
+
+  const cats = [
+    { key:'all', label:'전체' },
+    { key:'hotel', label:'🏨 숙소' },
+    { key:'food', label:'🍜 음식' },
+    { key:'sight', label:'🗺️ 관광' },
+    { key:'transport', label:'🚇 교통' },
+  ];
+
+  openModal(`
+    <div class="modal-title">장소 선택</div>
+    <div class="modal-filter-bar" id="pickerFilterBar">
+      ${cats.map(c => `<button class="filter-btn${c.key==='all'?' active':''}" onclick="filterPicker('${c.key}')">${c.label}</button>`).join('')}
+    </div>
+    <div class="place-picker-list" id="pickerList">${renderList()}</div>
+  `);
+
+  window._pickerSlotKey = slotKey;
+  window.filterPicker = function(cat) {
+    filterCat = cat;
+    document.querySelectorAll('#pickerFilterBar .filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    const places = allPlaces().filter(p => filterCat === 'all' || p.category === filterCat);
+    document.getElementById('pickerList').innerHTML = places.map(p => `
+      <div class="place-pick-item" onclick="addToSchedule('${slotKey}','${p.id}')">
+        <span class="ppi-emoji">${p.emoji}</span>
+        <span class="ppi-name">${p.name}</span>
+        <span class="ppi-cat" style="color:${CATEGORY_STYLE[p.category]?.color || '#888'}">${CATEGORY_STYLE[p.category]?.label || ''}</span>
+      </div>
+    `).join('');
+  };
+}
+
+function addToSchedule(slotKey, placeId) {
+  if (!state.schedule[slotKey]) state.schedule[slotKey] = [];
+  state.schedule[slotKey].push({ placeId, memo: '' });
+  saveToUrl();
+  closeModal();
+  renderSchedule();
+}
+
+function openCardDetail(slotKey, idx) {
+  const item = state.schedule[slotKey]?.[idx];
+  if (!item) return;
+  const place = findPlace(item.placeId);
+  if (!place) return;
+
+  openModal(`
+    <div class="card-detail-modal">
+      <div class="cd-place"><span style="font-size:28px">${place.emoji}</span> ${place.name}</div>
+      <div class="modal-field">
+        <label>메모</label>
+        <input type="text" id="cdMemo" value="${item.memo || ''}" placeholder="메모 입력..." onchange="updateCardMemo('${slotKey}',${idx},this.value)">
+      </div>
+      <div class="cd-actions">
+        <a class="cd-action-btn" href="${place.mapUrl}" target="_blank">📍 구글맵 열기</a>
+        <button class="cd-action-btn danger" onclick="removeFromSchedule('${slotKey}',${idx})">🗑️ 삭제</button>
+      </div>
+    </div>
+  `);
+}
+
+function updateCardMemo(slotKey, idx, memo) {
+  if (state.schedule[slotKey]?.[idx]) {
+    state.schedule[slotKey][idx].memo = memo;
+    saveToUrl();
+  }
+}
+
+function removeFromSchedule(slotKey, idx) {
+  if (state.schedule[slotKey]) {
+    state.schedule[slotKey].splice(idx, 1);
+    if (state.schedule[slotKey].length === 0) delete state.schedule[slotKey];
+    saveToUrl();
+    closeModal();
+    renderSchedule();
+  }
+}
+
+// ─── PLACES ───
+let placesFilter = 'all';
+
+function renderPlaces() {
+  const wrap = document.getElementById('placesWrap');
+  const cats = [
+    { key:'all', label:'전체' },
+    { key:'hotel', label:'🏨 숙소' },
+    { key:'food', label:'🍜 음식' },
+    { key:'sight', label:'🗺️ 관광' },
+    { key:'transport', label:'🚇 교통' },
+  ];
+
+  const places = allPlaces().filter(p => placesFilter === 'all' || p.category === placesFilter);
+  // Sort by district order
+  places.sort((a, b) => {
+    const ai = DISTRICT_ORDER.indexOf(a.district || '');
+    const bi = DISTRICT_ORDER.indexOf(b.district || '');
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+
+  let html = '<div class="filter-bar">';
+  cats.forEach(c => {
+    html += `<button class="filter-btn${c.key===placesFilter?' active':''}" onclick="setPlacesFilter('${c.key}')">${c.label}</button>`;
+  });
+  html += '</div>';
+
+  let lastDistrict = null;
+  html += '<div class="places-grid">';
+  places.forEach(p => {
+    if (p.district && p.district !== lastDistrict) {
+      if (lastDistrict !== null) html += '</div><div class="places-grid">';
+      html += `<div style="grid-column:1/-1;font-size:13px;font-weight:700;color:var(--red);padding:8px 0 2px;border-bottom:1px solid var(--border);margin-bottom:4px">${p.district}</div>`;
+      lastDistrict = p.district;
+    }
+    const cs = CATEGORY_STYLE[p.category] || { color:'#888', label:'기타' };
+    html += `
+      <div class="place-card">
+        <div class="pc-top">
+          <span class="pc-emoji">${p.emoji}</span>
+          <span class="pc-name">${p.name}</span>
+        </div>
+        ${p.desc ? `<div style="font-size:10px;color:var(--text-dim);line-height:1.4;margin:-2px 0 2px">${p.desc}</div>` : ''}
+        <span class="pc-cat" style="background:${cs.color}22;color:${cs.color}">${cs.label}</span>
+        <div class="pc-actions">
+          <a class="pc-btn" href="${p.mapUrl}" target="_blank" style="text-decoration:none">📍 지도</a>
+          <button class="pc-btn" onclick="openPlaceEditModal('${p.id}')">✏️ 편집</button>
+          <button class="pc-btn" onclick="openScheduleAddFromPlace('${p.id}')">📅 추가</button>
+          <button class="pc-btn danger" onclick="deletePlace('${p.id}')">🗑️</button>
+        </div>
+      </div>
+    `;
+  });
+
+  html += '</div>';
+  html += '<button class="add-place-btn" onclick="openAddPlaceModal()">+ 새 장소 추가</button>';
+  wrap.innerHTML = html;
+}
+
+function setPlacesFilter(cat) {
+  placesFilter = cat;
+  renderPlaces();
+}
+
+function openScheduleAddFromPlace(placeId) {
+  window._schedAddSelected = new Set();
+  window._schedAddPlaceId = placeId;
+  let html = '<div class="modal-title">스케줄에 추가</div>';
+  html += '<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">시간대를 선택하세요 (복수 선택 가능)</div>';
+  DATES.forEach(d => {
+    html += `<div style="margin-bottom:8px;font-weight:700;color:${DATE_COLORS[d]};font-size:13px">${DATE_LABELS[d]}</div>`;
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+    TIME_SLOTS.forEach(slot => {
+      const hh = slot.split(':')[0].padStart(2,'0') + ':' + slot.split(':')[1];
+      const key = d + '_' + slot;
+      html += `<button class="filter-btn sched-slot-btn" data-key="${key}" style="padding:6px 10px;font-size:11px" onclick="toggleSchedSlot(this,'${key}')">${hh}</button>`;
+    });
+    html += '</div>';
+  });
+  html += `<div class="modal-actions">
+    <button class="modal-btn secondary" onclick="closeModal()">취소</button>
+    <button class="modal-btn primary" id="schedAddConfirm" onclick="confirmSchedAdd()" disabled style="opacity:.5">확인 (0개)</button>
+  </div>`;
+  openModal(html);
+}
+
+function toggleSchedSlot(btn, key) {
+  if (window._schedAddSelected.has(key)) {
+    window._schedAddSelected.delete(key);
+    btn.classList.remove('active');
+  } else {
+    window._schedAddSelected.add(key);
+    btn.classList.add('active');
+  }
+  const cnt = window._schedAddSelected.size;
+  const confirmBtn = document.getElementById('schedAddConfirm');
+  confirmBtn.textContent = `확인 (${cnt}개)`;
+  confirmBtn.disabled = cnt === 0;
+  confirmBtn.style.opacity = cnt === 0 ? '.5' : '1';
+}
+
+function confirmSchedAdd() {
+  const placeId = window._schedAddPlaceId;
+  window._schedAddSelected.forEach(slotKey => {
+    if (!state.schedule[slotKey]) state.schedule[slotKey] = [];
+    state.schedule[slotKey].push({ placeId, memo: '' });
+  });
+  saveToUrl();
+  closeModal();
+  renderSchedule();
+  renderPlaces();
+}
+
+function openAddPlaceModal() {
+  openModal(`
+    <div class="modal-title">새 장소 추가</div>
+    <div class="modal-field">
+      <label>장소 이름</label>
+      <input type="text" id="newPlaceName" placeholder="장소 이름 입력...">
+    </div>
+    <div class="modal-field">
+      <label>카테고리</label>
+      <select id="newPlaceCat">
+        <option value="hotel">🏨 숙소</option>
+        <option value="food">🍜 음식</option>
+        <option value="sight" selected>🗺️ 관광</option>
+        <option value="transport">🚇 교통</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>구 (지역)</label>
+      <input type="text" id="newPlaceDistrict" placeholder="예: 중산구, 신이구...">
+    </div>
+    <div class="modal-field">
+      <label>부가 설명 (선택)</label>
+      <input type="text" id="newPlaceDesc" placeholder="장소에 대한 설명...">
+    </div>
+    <div class="modal-field">
+      <label>구글맵 링크 (비워두면 자동 생성)</label>
+      <input type="text" id="newPlaceUrl" placeholder="https://...">
+    </div>
+    <div class="modal-field">
+      <label>위도 (선택, 지도 표시용)</label>
+      <input type="number" step="any" id="newPlaceLat" placeholder="25.033">
+    </div>
+    <div class="modal-field">
+      <label>경도 (선택, 지도 표시용)</label>
+      <input type="number" step="any" id="newPlaceLng" placeholder="121.565">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeModal()">취소</button>
+      <button class="modal-btn primary" onclick="addCustomPlace()">추가</button>
+    </div>
+  `);
+}
+
+function addCustomPlace() {
+  const name = document.getElementById('newPlaceName').value.trim();
+  if (!name) return;
+  const cat = document.getElementById('newPlaceCat').value;
+  const district = document.getElementById('newPlaceDistrict').value.trim();
+  const desc = document.getElementById('newPlaceDesc').value.trim();
+  const url = document.getElementById('newPlaceUrl').value.trim();
+  const lat = parseFloat(document.getElementById('newPlaceLat').value) || null;
+  const lng = parseFloat(document.getElementById('newPlaceLng').value) || null;
+
+  const id = 'c' + Date.now();
+  const emoji = CATEGORY_EMOJI[cat] || '📍';
+  const mapUrl = url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}+대만`;
+
+  state.customPlaces.push({ id, name, category: cat, emoji, district, desc, mapUrl, lat, lng });
+  saveToUrl();
+  closeModal();
+  renderPlaces();
+}
+
+function openPlaceEditModal(id) {
+  const place = findPlace(id);
+  if (!place) return;
+  const descEscaped = (place.desc || '').replace(/"/g, '&quot;');
+  const urlEscaped = (place.mapUrl || '').replace(/"/g, '&quot;');
+  openModal(`
+    <div class="modal-title">장소 편집</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:16px;font-weight:700">
+      <span style="font-size:24px">${place.emoji}</span> ${place.name}
+    </div>
+    <div class="modal-field">
+      <label>부가 설명</label>
+      <input type="text" id="editPlaceDesc" value="${descEscaped}" placeholder="장소에 대한 설명...">
+    </div>
+    <div class="modal-field">
+      <label>구글맵 링크</label>
+      <input type="text" id="editPlaceUrl" value="${urlEscaped}" placeholder="https://...">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeModal()">취소</button>
+      <button class="modal-btn primary" onclick="savePlaceEdit('${id}')">저장</button>
+    </div>
+  `);
+}
+
+function savePlaceEdit(id) {
+  const desc = document.getElementById('editPlaceDesc').value.trim();
+  const mapUrl = document.getElementById('editPlaceUrl').value.trim();
+  if (id.startsWith('c')) {
+    const cp = state.customPlaces.find(p => p.id === id);
+    if (cp) {
+      cp.desc = desc;
+      if (mapUrl) cp.mapUrl = mapUrl;
+    }
+  } else {
+    if (!state.placeEdits) state.placeEdits = {};
+    state.placeEdits[id] = { desc, ...(mapUrl ? { mapUrl } : {}) };
+  }
+  saveToUrl();
+  closeModal();
+  renderPlaces();
+}
+
+function deletePlace(id) {
+  if (id.startsWith('c')) {
+    state.customPlaces = state.customPlaces.filter(p => p.id !== id);
+  } else {
+    if (!state.hiddenPlaces) state.hiddenPlaces = [];
+    if (!state.hiddenPlaces.includes(id)) state.hiddenPlaces.push(id);
+  }
+  // Remove from schedule too
+  Object.keys(state.schedule).forEach(key => {
+    state.schedule[key] = state.schedule[key].filter(item => item.placeId !== id);
+    if (state.schedule[key].length === 0) delete state.schedule[key];
+  });
+  saveToUrl();
+  renderPlaces();
+}
+
+// ─── MEMO ───
+let memoTab = 'common';
+
+function renderMemo() {
+  const wrap = document.getElementById('memoWrap');
+  const tabs = ['common', ...DATES];
+  const tabLabels = { ...DATE_SHORT, common: '기존' };
+
+  let html = '<div class="memo-date-bar">';
+  tabs.forEach(t => {
+    html += `<button class="memo-date-btn${t===memoTab?' active':''}" onclick="switchMemoTab('${t}')">${tabLabels[t]}</button>`;
+  });
+  html += '</div>';
+  html += `<textarea class="memo-textarea" id="memoArea" placeholder="메모를 입력하세요..." oninput="saveMemo()">${state.memos[memoTab] || ''}</textarea>`;
+  wrap.innerHTML = html;
+}
+
+function switchMemoTab(tab) {
+  memoTab = tab;
+  renderMemo();
+}
+
+function saveMemo() {
+  state.memos[memoTab] = document.getElementById('memoArea').value;
+  saveToUrl();
+}
+
+// ─── Init ───
+initState();
+updateTWTime();
+setInterval(updateTWTime, 10000);
+initMap();
+updateMapMarkers();
+renderSchedule();
+renderPlaces();
+renderMemo();
+</script>
+</body>
+</html>

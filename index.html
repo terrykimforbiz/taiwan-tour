@@ -3,28 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>윤태환의 대만 여행기</title>
+<title>윤태환의 대만여행기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --bg: #f5f3ef;
+  --bg: #ffffff;
   --card: #ffffff;
-  --card-hover: #f0ede8;
-  --red: #e8312a;
-  --gold: #d4a017;
-  --text: #1a1a1a;
-  --text-dim: #777;
-  --blue: #4a90e2;
-  --green: #52c97a;
-  --orange: #f5a623;
-  --gray: #9b9b9b;
-  --border: rgba(0,0,0,.08);
-  --radius: 10px;
+  --card-hover: #fef3e8;
+  --primary: #e07c4f;
+  --primary-dark: #c4612e;
+  --primary-light: #f5c6a0;
+  --gold: #f0a050;
+  --text: #4a4a4a;
+  --text-dim: #999;
+  --blue: #90caf9;
+  --green: #a5d6a7;
+  --orange: #ffcc80;
+  --gray: #bdbdbd;
+  --border: rgba(0,0,0,.06);
+  --radius: 12px;
   --nav-h: 64px;
   --header-h: 52px;
 }
@@ -42,27 +45,29 @@ html, body {
 header {
   position: fixed; top: 0; left: 0; right: 0;
   height: var(--header-h);
-  background: linear-gradient(135deg, #b71c1c 0%, #c62828 50%, #d32f2f 100%);
+  background: linear-gradient(135deg, #e07c4f 0%, #f0a050 50%, #f4c77d 100%);
   border-bottom: none;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 16px;
   z-index: 1000;
-  box-shadow: 0 2px 12px rgba(183,28,28,.2);
+  box-shadow: 0 2px 12px rgba(224,124,79,.3);
 }
 
 header::after {
   content: '';
   position: absolute; bottom: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--red), var(--gold), var(--red));
+  background: linear-gradient(90deg, #f5c6a0, #f4c77d, #f5c6a0);
   opacity: .7;
 }
 
 .header-title {
-  font-family: 'Dela Gothic One', cursive;
-  font-size: 15px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
   color: #fff;
-  letter-spacing: -0.5px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 4px rgba(0,0,0,.1);
 }
 
 .header-right {
@@ -71,24 +76,24 @@ header::after {
 }
 
 .tw-time {
-  color: rgba(255,255,255,.8);
+  color: rgba(255,255,255,.85);
   font-variant-numeric: tabular-nums;
   font-size: 11px;
 }
 
 .btn-copy {
-  background: rgba(255,255,255,.2);
-  border: 1px solid rgba(255,255,255,.3);
+  background: rgba(255,255,255,.25);
+  border: 1px solid rgba(255,255,255,.35);
   color: #fff;
   font-size: 11px;
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
   transition: all .2s;
   white-space: nowrap;
 }
-.btn-copy:active { transform: scale(.95); background: rgba(255,255,255,.35); }
+.btn-copy:active { transform: scale(.95); background: rgba(255,255,255,.4); }
 
 /* ── Tab bar ── */
 nav.tab-bar {
@@ -119,16 +124,16 @@ nav.tab-bar button {
 nav.tab-bar button .tab-icon { font-size: 22px; line-height: 1; }
 
 nav.tab-bar button.active {
-  color: var(--red);
+  color: var(--primary-dark);
 }
 
 nav.tab-bar button.active::before {
   content: '';
   position: absolute; top: 0; left: 25%; right: 25%;
   height: 2px;
-  background: var(--red);
+  background: var(--primary);
   border-radius: 0 0 2px 2px;
-  box-shadow: 0 0 10px var(--red);
+  box-shadow: 0 0 10px var(--primary);
 }
 
 /* ── Main content ── */
@@ -170,25 +175,24 @@ nav.tab-bar button.active::before {
   transition: all .2s;
 }
 .map-date-btn.active {
-  background: var(--red);
+  background: var(--primary);
   color: #fff;
-  border-color: var(--red);
-  box-shadow: 0 2px 8px rgba(232,49,42,.2);
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(224,124,79,.3);
 }
 
 #map-container {
   flex: 1;
   min-height: 0;
 }
-#map-container .leaflet-tile-pane { opacity: 0.5; }
 
 /* Leaflet popup */
 .leaflet-popup-content-wrapper {
   background: var(--card) !important;
   color: var(--text) !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   border: 1px solid var(--border) !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,.12) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,.1) !important;
 }
 .leaflet-popup-tip { background: var(--card) !important; }
 .leaflet-popup-content { margin: 10px 14px !important; font-size: 13px !important; font-family: 'Noto Sans KR', sans-serif !important; }
@@ -197,18 +201,51 @@ nav.tab-bar button.active::before {
   display: inline-block;
   margin-top: 6px;
   padding: 4px 10px;
-  background: var(--red);
+  background: var(--primary);
   color: #fff;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 11px;
   text-decoration: none;
 }
 
 /* ── Schedule tab ── */
 .schedule-wrap {
-  overflow-x: auto;
+  overflow: auto;
   padding: 12px;
   min-height: 100%;
+  position: relative;
+}
+.schedule-inner {
+  transform-origin: 0 0;
+  transition: transform .15s ease;
+}
+.schedule-zoom-bar {
+  position: sticky;
+  top: 0; right: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding-bottom: 8px;
+}
+.schedule-zoom-bar button {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  display: flex; align-items: center; justify-content: center;
+}
+.schedule-zoom-bar button:active { background: #fef3e8; }
+.schedule-zoom-bar .zoom-level {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex; align-items: center;
+  min-width: 36px; justify-content: center;
 }
 
 .schedule-table {
@@ -236,8 +273,9 @@ nav.tab-bar button.active::before {
 }
 
 .schedule-table th .day-date {
-  font-family: 'Dela Gothic One', cursive;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 14px;
+  font-weight: 700;
   color: var(--text);
   display: block;
 }
@@ -253,7 +291,7 @@ nav.tab-bar button.active::before {
 }
 
 .schedule-table td:hover {
-  background: rgba(0,0,0,.02);
+  background: rgba(224,124,79,.06);
 }
 
 .schedule-table td.time-cell {
@@ -270,7 +308,7 @@ nav.tab-bar button.active::before {
 
 .sched-card {
   background: var(--bg);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 5px 8px;
   font-size: 11px;
   margin-bottom: 3px;
@@ -279,13 +317,42 @@ nav.tab-bar button.active::before {
   align-items: center;
   gap: 4px;
   border-left: 3px solid var(--text-dim);
-  transition: background .15s;
+  transition: background .15s, transform .15s, box-shadow .15s;
   position: relative;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.sched-card:hover { background: #eae7e1; }
+.sched-card:hover { background: #fef3e8; }
+.sched-card.dragging { opacity: 0.3; }
 .sched-card .sc-emoji { font-size: 13px; flex-shrink: 0; }
 .sched-card .sc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
 .sched-card .sc-memo { font-size: 9px; color: var(--text-dim); display: block; margin-top: 1px; }
+
+.drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-left: 3px solid var(--primary);
+  box-shadow: 0 6px 20px rgba(0,0,0,.2);
+  transform: scale(1.05);
+  opacity: 0.95;
+  max-width: 140px;
+  font-family: inherit;
+}
+
+.schedule-table td.drag-over {
+  background: rgba(224,124,79,.18) !important;
+  box-shadow: inset 0 0 0 2px var(--primary);
+  border-radius: 4px;
+}
 
 /* ── Places tab ── */
 .places-wrap {
@@ -312,9 +379,9 @@ nav.tab-bar button.active::before {
   transition: all .2s;
 }
 .filter-btn.active {
-  background: var(--red);
+  background: var(--primary);
   color: #fff;
-  border-color: var(--red);
+  border-color: var(--primary);
 }
 
 .places-grid {
@@ -330,9 +397,9 @@ nav.tab-bar button.active::before {
   border: 1px solid var(--border);
   transition: all .2s;
   display: flex; flex-direction: column; gap: 6px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  box-shadow: 0 1px 6px rgba(224,124,79,.08);
 }
-.place-card:hover { border-color: rgba(0,0,0,.15); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.place-card:hover { border-color: rgba(224,124,79,.3); box-shadow: 0 2px 12px rgba(224,124,79,.15); }
 
 .place-card .pc-top {
   display: flex; align-items: center; gap: 6px;
@@ -355,7 +422,7 @@ nav.tab-bar button.active::before {
 .pc-btn {
   flex: 1;
   padding: 5px 0;
-  border-radius: 5px;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text-dim);
@@ -366,8 +433,8 @@ nav.tab-bar button.active::before {
   text-align: center;
 }
 .pc-btn:active { transform: scale(.96); }
-.pc-btn.danger { color: #d32f2f; border-color: rgba(211,47,47,.2); }
-.pc-btn.danger:hover { background: rgba(211,47,47,.06); }
+.pc-btn.danger { color: #e57373; border-color: rgba(229,115,115,.2); }
+.pc-btn.danger:hover { background: rgba(229,115,115,.06); }
 
 .add-place-btn {
   display: block;
@@ -375,7 +442,7 @@ nav.tab-bar button.active::before {
   margin-top: 12px;
   padding: 14px;
   border-radius: var(--radius);
-  border: 2px dashed rgba(0,0,0,.12);
+  border: 2px dashed rgba(224,124,79,.3);
   background: transparent;
   color: var(--text-dim);
   font-family: inherit;
@@ -383,7 +450,7 @@ nav.tab-bar button.active::before {
   cursor: pointer;
   transition: all .2s;
 }
-.add-place-btn:hover { border-color: var(--red); color: var(--red); }
+.add-place-btn:hover { border-color: var(--primary); color: var(--primary); }
 
 /* ── Memo tab ── */
 .memo-wrap { padding: 12px; }
@@ -407,9 +474,9 @@ nav.tab-bar button.active::before {
   transition: all .2s;
 }
 .memo-date-btn.active {
-  background: var(--red);
+  background: var(--primary);
   color: #fff;
-  border-color: var(--red);
+  border-color: var(--primary);
 }
 
 .memo-textarea {
@@ -426,13 +493,13 @@ nav.tab-bar button.active::before {
   outline: none;
   line-height: 1.7;
 }
-.memo-textarea:focus { border-color: var(--red); }
+.memo-textarea:focus { border-color: var(--primary); }
 .memo-textarea::placeholder { color: var(--text-dim); }
 
 /* ── Modal ── */
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,.4);
+  background: rgba(0,0,0,.35);
   backdrop-filter: blur(4px);
   z-index: 2000;
   display: flex; align-items: flex-end; justify-content: center;
@@ -443,7 +510,7 @@ nav.tab-bar button.active::before {
 
 .modal-sheet {
   background: var(--card);
-  border-radius: 16px 16px 0 0;
+  border-radius: 18px 18px 0 0;
   width: 100%;
   max-width: 500px;
   max-height: 80vh;
@@ -451,22 +518,54 @@ nav.tab-bar button.active::before {
   padding: 20px 16px;
   transform: translateY(100%);
   transition: transform .3s cubic-bezier(.32,.72,0,1);
-  box-shadow: 0 -4px 30px rgba(0,0,0,.12);
+  box-shadow: 0 -4px 30px rgba(0,0,0,.1);
 }
 .modal-overlay.show .modal-sheet { transform: translateY(0); }
 
-.modal-handle {
+.modal-handle-bar {
+  position: sticky;
+  top: -20px;
+  margin: -20px -16px 0;
+  padding: 10px 16px 6px;
+  background: var(--card);
+  border-radius: 18px 18px 0 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.modal-handle-bar .handle-line {
   width: 36px; height: 4px;
-  background: rgba(0,0,0,.12);
+  background: rgba(224,124,79,.4);
   border-radius: 2px;
-  margin: 0 auto 16px;
+}
+.modal-handle-bar .modal-close-x {
+  position: absolute;
+  right: 14px;
+  top: 8px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.06);
+  border: none;
+  font-size: 16px;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.modal-handle-bar .modal-close-x:hover {
+  background: rgba(0,0,0,.12);
 }
 
 .modal-title {
-  font-family: 'Dela Gothic One', cursive;
+  font-family: 'Noto Sans KR', sans-serif;
   font-size: 16px;
+  font-weight: 700;
   margin-bottom: 16px;
-  color: var(--red);
+  color: var(--primary-dark);
 }
 
 .modal-field { margin-bottom: 12px; }
@@ -489,7 +588,7 @@ nav.tab-bar button.active::before {
   outline: none;
 }
 .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus {
-  border-color: var(--red);
+  border-color: var(--primary);
 }
 .modal-field select { cursor: pointer; }
 .modal-field select option { background: var(--bg); }
@@ -502,7 +601,7 @@ nav.tab-bar button.active::before {
 .modal-btn {
   flex: 1;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   font-family: inherit;
   font-size: 14px;
@@ -510,7 +609,7 @@ nav.tab-bar button.active::before {
   cursor: pointer;
   transition: all .15s;
 }
-.modal-btn.primary { background: var(--red); color: #fff; }
+.modal-btn.primary { background: var(--primary); color: #fff; }
 .modal-btn.primary:active { transform: scale(.97); }
 .modal-btn.secondary { background: var(--bg); color: var(--text-dim); }
 
@@ -557,13 +656,13 @@ nav.tab-bar button.active::before {
   text-align: left;
   transition: all .15s;
 }
-.cd-action-btn:hover { background: #eae7e1; }
-.cd-action-btn.danger { color: #d32f2f; border-color: rgba(211,47,47,.2); }
+.cd-action-btn:hover { background: #fef3e8; }
+.cd-action-btn.danger { color: #e57373; border-color: rgba(229,115,115,.2); }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(224,124,79,.25); border-radius: 2px; }
 
 .schedule-table td.half-hour,
 .schedule-table td.time-cell.half-hour {
@@ -572,7 +671,7 @@ nav.tab-bar button.active::before {
 }
 .schedule-table td.time-cell.half-hour {
   font-size: 10px;
-  color: #aaa;
+  color: #bbb;
 }
 
 .dist-measure-btn {
@@ -590,7 +689,7 @@ nav.tab-bar button.active::before {
 }
 .dist-measure-btn.active {
   background: var(--gold);
-  color: #000;
+  color: #fff;
   border-color: var(--gold);
 }
 
@@ -603,7 +702,7 @@ nav.tab-bar button.active::before {
 <body>
 
 <header>
-  <div class="header-title">윤태환의 대만 여행기</div>
+  <div class="header-title">🧋 윤태환의 대만여행기</div>
   <div class="header-right">
     <span class="tw-time" id="twTime"></span>
     <button class="btn-copy" id="btnCopy" onclick="copyLink()">링크 복사</button>
@@ -613,7 +712,7 @@ nav.tab-bar button.active::before {
 <!-- Map -->
 <div class="tab-content active" id="tab-map">
   <div class="map-date-bar" id="mapDateBar"></div>
-  <div id="distanceBar" style="display:none;padding:8px 12px;background:#fff3cd;font-size:12px;border-bottom:1px solid var(--border);flex-shrink:0"></div>
+  <div id="distanceBar" style="display:none;padding:8px 12px;background:#fff3e0;font-size:12px;border-bottom:1px solid var(--border);flex-shrink:0"></div>
   <div id="map-container"></div>
 </div>
 
@@ -635,7 +734,7 @@ nav.tab-bar button.active::before {
 <!-- Tab bar -->
 <nav class="tab-bar">
   <button class="active" data-tab="tab-map"><span class="tab-icon">🗺️</span>지도</button>
-  <button data-tab="tab-schedule"><span class="tab-icon">📅</span>스케줄</button>
+  <button data-tab="tab-schedule"><span class="tab-icon">📅</span>일정</button>
   <button data-tab="tab-places"><span class="tab-icon">📍</span>장소</button>
   <button data-tab="tab-memo"><span class="tab-icon">📝</span>메모</button>
 </nav>
@@ -650,73 +749,81 @@ nav.tab-bar button.active::before {
 const DATES = ['0319','0320','0321','0322'];
 const DATE_LABELS = { '0319':'3/19 수', '0320':'3/20 목', '0321':'3/21 금', '0322':'3/22 토' };
 const DATE_SHORT = { '0319':'3/19', '0320':'3/20', '0321':'3/21', '0322':'3/22' };
-const DATE_COLORS = { '0319':'#e8312a', '0320':'#4a90e2', '0321':'#52c97a', '0322':'#f5c842' };
+const DATE_COLORS = { '0319':'#e07c4f', '0320':'#90caf9', '0321':'#a5d6a7', '0322':'#ffcc80' };
 const TIME_SLOTS = [];
 for (let h = 6; h <= 23; h++) {
   TIME_SLOTS.push(h + ':00');
   TIME_SLOTS.push(h + ':30');
 }
-// Slot keys use "HH:MM" format, e.g. "0319_6:00", "0319_6:30"
 
 const CATEGORY_STYLE = {
-  hotel:     { color: '#4a90e2', label: '숙소' },
-  food:      { color: '#f5a623', label: '음식' },
-  sight:     { color: '#52c97a', label: '관광' },
-  transport: { color: '#9b9b9b', label: '교통' },
+  hotel:     { color: '#90caf9', label: '호텔·교통' },
+  food:      { color: '#ffcc80', label: '먹거리' },
+  sight:     { color: '#a5d6a7', label: '관광' },
+  shopping:  { color: '#f48fb1', label: '쇼핑' },
 };
 
-const CATEGORY_EMOJI = { hotel:'🏨', food:'🍜', sight:'🗺️', transport:'🚇' };
+const CATEGORY_EMOJI = { hotel:'🏨', food:'🍜', sight:'🗺️', shopping:'🛍️' };
 
-// 구(district) 정렬 순서
-const DISTRICT_ORDER = ['타오위안','신반','신베이시','완화구','중정구','중산구','다안구','다퉁구','신이구','쑹산구','스린구','단수이구'];
+// 지역 정렬 순서 (대만 타이베이)
+const DISTRICT_ORDER = ['타오위안','신반','완화구','중정구','다안구','중산구','다퉁구','신이구','쑹산구','스린구','단수이구','신베이시'];
+
+// 대만 바운딩 박스 (검색 범위)
+const TW_VIEWBOX = '121.3,24.9,121.8,25.3';
 
 const PRESET_PLACES = [
-  // ── 타오위안 ──
-  { id:'p1', name:'타오위안 국제공항', category:'transport', emoji:'✈️', district:'타오위안', desc:'전자 입출국 삼일전!!!', mapUrl:'https://maps.app.goo.gl/7k2Ldi21Rf7hEcNd9', lat:25.0797, lng:121.2342 },
-  // ── 신반 ──
-  { id:'p2', name:'힐튼 호텔', category:'hotel', emoji:'🏨', district:'신반', desc:'첫날 묶을 호텔', mapUrl:'https://maps.app.goo.gl/QTxCEagG3aFuFQ7FA?g_st=ic', lat:25.0146, lng:121.4654 },
-  { id:'p3', name:'반챠오 난야 야시장', category:'sight', emoji:'🌃', district:'신반', desc:'', mapUrl:'https://maps.app.goo.gl/QGJ4DcLPvL53oJ3A9', lat:25.0133, lng:121.4591 },
-  { id:'p4', name:'첫날 꼬치 맥주집 品都串燒攤', category:'food', emoji:'🍢', district:'신반', desc:'', mapUrl:'https://maps.app.goo.gl/1dWZSkrcT7tV5DcZA', lat:25.0138, lng:121.4643 },
-  { id:'p5', name:'딘타이펑(신반)', category:'food', emoji:'🥟', district:'신반', desc:'', mapUrl:'https://maps.app.goo.gl/tuxswmWX4WaRCGQd9', lat:25.0140, lng:121.4635 },
-  // ── 신베이시 ──
-  { id:'p6', name:'지우펀', category:'sight', emoji:'🏮', district:'신베이시', desc:'옛 금광 마을로 붉은 등불이 켜지는 좁은 골목길과 찻집이 영화 속 장면 같은 낭만적인 풍경을 선사함', mapUrl:'https://www.google.com/maps/search/?api=1&query=九份老街', lat:25.1094, lng:121.8443 },
-  // ── 완화구 ──
-  { id:'p7', name:'용산사', category:'sight', emoji:'🛕', district:'완화구', desc:'8세기 중반에 세워진 타이베이에서 가장 오래된 사찰로 불교, 도교, 민간신앙이 공존하며 관세음보살상이 영험하기로 유명함', mapUrl:'https://www.google.com/maps/search/?api=1&query=龍山寺+taipei', lat:25.0373, lng:121.4998 },
-  { id:'p8', name:'보피라오 역사거리', category:'sight', emoji:'🏚️', district:'완화구', desc:'붉은 벽돌과 아치형 기둥이 이어지는 1930년대 올드 타이베이 정취를 간직한 과거 목재 무역의 중심지', mapUrl:'https://www.google.com/maps/search/?api=1&query=剝皮寮歷史街區', lat:25.0375, lng:121.5017 },
-  { id:'p9', name:'시먼딩', category:'sight', emoji:'🛍️', district:'완화구', desc:'타이베이의 명동으로 불리는 젊은 문화와 패션, 먹거리의 중심지로 랜드마크인 서문홍루가 자리하고 있음', mapUrl:'https://www.google.com/maps/search/?api=1&query=西門町', lat:25.0423, lng:121.5081 },
-  { id:'p10', name:'진천미', category:'food', emoji:'🍜', district:'완화구', desc:'', mapUrl:'https://maps.app.goo.gl/41ew7G14UMgrGkHy8', lat:25.0380, lng:121.5000 },
-  // ── 중정구 ──
-  { id:'p11', name:'국립 대만 박물관', category:'sight', emoji:'🏛️', district:'중정구', desc:'1908년 설립된 대만 최초의 국립 박물관으로 신고전주의 양식의 건물 안에서 대만의 역사와 자연사를 관람할 수 있음', mapUrl:'https://www.google.com/maps/search/?api=1&query=國立臺灣博物館', lat:25.0430, lng:121.5150 },
-  { id:'p12', name:'228 평화기념 공원', category:'sight', emoji:'🌳', district:'중정구', desc:'228 사건 희생자를 기리는 공원으로, 도심 속 평화로운 연못과 산책길이 어우러진 휴식처', mapUrl:'https://www.google.com/maps/search/?api=1&query=二二八和平紀念公園', lat:25.0418, lng:121.5152 },
-  { id:'p13', name:'대만 총통부', category:'sight', emoji:'🏢', district:'중정구', desc:'일제강점기 총독부 청사로 지어진 행정 중심지로 평일 오전에 일부 구역이 일반에 개방됨', mapUrl:'https://www.google.com/maps/search/?api=1&query=總統府+taipei', lat:25.0400, lng:121.5118 },
-  { id:'p14', name:'타이베이 식물원', category:'sight', emoji:'🌿', district:'중정구', desc:'2천 종 이상의 식물이 있는 도심 속 오아시스로 일본식 목조건물인 남먼딩 323과 연꽃 연못이 있음', mapUrl:'https://www.google.com/maps/search/?api=1&query=台北植物園', lat:25.0320, lng:121.5100 },
-  { id:'p15', name:'중정 기념당', category:'sight', emoji:'🏛️', district:'중정구', desc:'장제스 전 총통을 추모하기 위해 세워진 역사적 랜드마크로 웅장한 아치와 푸른 지붕의 대리석 건물이 특징임', mapUrl:'https://www.google.com/maps/search/?api=1&query=中正紀念堂', lat:25.0350, lng:121.5218 },
-  // ── 다안구 ──
-  { id:'p16', name:'융캉제', category:'sight', emoji:'🍽️', district:'다안구', desc:'딘타이펑 본점이 위치한 대표적인 미식거리로 전통 음식과 감각적인 카페, 편집샵이 공존함', mapUrl:'https://www.google.com/maps/search/?api=1&query=永康街+taipei', lat:25.0330, lng:121.5290 },
-  // ── 중산구 ──
-  { id:'p17', name:'코지 호텔', category:'hotel', emoji:'🏨', district:'중산구', desc:'둘,셋째날 묵을 호텔', mapUrl:'https://maps.app.goo.gl/2amRk6TZx8ZgDRaPA?g_st=ic', lat:25.0528, lng:121.5210 },
-  { id:'p18', name:'신트랜드', category:'sight', emoji:'🎮', district:'중산구', desc:'최신 디지털 기기와 게임, 피규어 등이 입점한 IT 중심 복합 쇼핑몰로 타이베이의 아키하바라로 불림', mapUrl:'https://www.google.com/maps/search/?api=1&query=三創生活+taipei', lat:25.0445, lng:121.5320 },
-  { id:'p19', name:'화산 1914 창의문화 원구', category:'sight', emoji:'🎨', district:'중산구', desc:'옛 양조장을 개조한 복합문화공간으로 빈티지한 벽돌 건물과 예술가들의 감성이 어우러진 포토스팟', mapUrl:'https://www.google.com/maps/search/?api=1&query=華山1914文化創意產業園區', lat:25.0440, lng:121.5295 },
-  { id:'p20', name:'중산 선형 공원', category:'sight', emoji:'🌲', district:'중산구', desc:'도심 속 예술 작품과 상점이 어우러진 산책로이며, 인근 치펑제 골목은 젊은 층이 선호하는 트렌디한 거리임', mapUrl:'https://www.google.com/maps/search/?api=1&query=中山線形公園', lat:25.0530, lng:121.5230 },
-  // ── 다퉁구 ──
-  { id:'p21', name:'닝샤 야시장', category:'sight', emoji:'🌃', district:'다퉁구', desc:'규모는 작지만 미슐랭 빕구르망 선정 노점이 있는 등 현지인들이 즐겨 찾는 알찬 미식 야시장', mapUrl:'https://www.google.com/maps/search/?api=1&query=寧夏夜市', lat:25.0558, lng:121.5155 },
-  // ── 신이구 ──
-  { id:'p22', name:'신이 쇼핑 거리', category:'sight', emoji:'🛒', district:'신이구', desc:'백화점들이 스카이워크로 연결된 타이베이 최대 쇼핑 지구로 화려한 도시 라이프스타일의 중심지', mapUrl:'https://www.google.com/maps/search/?api=1&query=信義商圈', lat:25.0360, lng:121.5670 },
-  { id:'p23', name:'타이베이 101', category:'sight', emoji:'🏙️', district:'신이구', desc:'대나무 마디 모양의 독특한 외관을 가진 상징적 빌딩으로 89층과 91층에 전망대가 있음', mapUrl:'https://maps.app.goo.gl/hjYppKbWJZndz5jy6', lat:25.0340, lng:121.5645 },
-  { id:'p24', name:'스스남촌', category:'sight', emoji:'🏘️', district:'신이구', desc:'과거 군인 가족 거주지를 개조한 문화공간으로 현대적인 빌딩 숲 사이에서 빈티지한 대비를 이룸', mapUrl:'https://www.google.com/maps/search/?api=1&query=四四南村', lat:25.0315, lng:121.5625 },
-  { id:'p25', name:'샹산역 (101타워 뷰)', category:'sight', emoji:'⛰️', district:'신이구', desc:'101타워를 산에서 보는 곳', mapUrl:'https://maps.app.goo.gl/KqVzTx5QTxKBh6Lv5', lat:25.0270, lng:121.5710 },
-  { id:'p26', name:'송인거리 (101타워 뷰)', category:'sight', emoji:'📸', district:'신이구', desc:'101타워를 길거리에서 보는 곳', mapUrl:'https://maps.app.goo.gl/ozEftrc2zMogu58g6', lat:25.0345, lng:121.5680 },
-  // ── 쑹산구 ──
-  { id:'p27', name:'타이베이돔', category:'sight', emoji:'🏟️', district:'쑹산구', desc:'2023년 완공된 초대형 돔구장으로 경기장과 쇼핑몰, 레스토랑이 연결된 복합 엔터테인먼트 공간', mapUrl:'https://www.google.com/maps/search/?api=1&query=台北大巨蛋', lat:25.0445, lng:121.5555 },
-  { id:'p28', name:'숭산문화 창의 공원', category:'sight', emoji:'🎭', district:'쑹산구', desc:'옛 담배 공장을 리모델링하여 디자인 전시, 팝업 스토어, 카페 등이 들어선 예술적 휴식처', mapUrl:'https://www.google.com/maps/search/?api=1&query=松山文創園區', lat:25.0440, lng:121.5600 },
-  { id:'p29', name:'라오허제 야시장', category:'sight', emoji:'🌃', district:'쑹산구', desc:'타이베이에서 가장 오래된 야시장 중 하나로 입구의 후초병(호자우빙)이 명물임', mapUrl:'https://www.google.com/maps/search/?api=1&query=饒河街觀光夜市', lat:25.0513, lng:121.5775 },
-  { id:'p30', name:'숭산 치유궁', category:'sight', emoji:'🛕', district:'쑹산구', desc:'바다의 여신 마주를 모신 화려한 도교 사원으로 야시장 입구의 랜드마크 역할을 함', mapUrl:'https://www.google.com/maps/search/?api=1&query=松山慈祐宮', lat:25.0510, lng:121.5770 },
-  // ── 스린구 ──
-  { id:'p31', name:'스린 야시장', category:'sight', emoji:'🌃', district:'스린구', desc:'100년 이상의 역사를 가진 타이베이 최대 야시장으로 대왕오징어, 굴전 등 온갖 길거리 음식이 모여 있음', mapUrl:'https://www.google.com/maps/search/?api=1&query=士林夜市', lat:25.0882, lng:121.5241 },
-  { id:'p32', name:'국립 고궁 박물원', category:'sight', emoji:'🏺', district:'스린구', desc:'아시아 최대 규모의 박물관으로 취옥백채와 육형석 등 진귀한 중국 황실 유물을 소장함', mapUrl:'https://www.google.com/maps/search/?api=1&query=國立故宮博物院', lat:25.1024, lng:121.5485 },
-  // ── 단수이구 ──
-  { id:'p33', name:'홍마오청/소백궁/진리대학교', category:'sight', emoji:'🏰', district:'단수이구', desc:'붉은 벽돌의 요새와 서양식 관저, 영화 촬영지로 유명한 캠퍼스가 어우러진 이국적인 노을 명소', mapUrl:'https://www.google.com/maps/search/?api=1&query=淡水紅毛城', lat:25.1750, lng:121.4320 },
-  { id:'p34', name:'스펀지 케익 緣味古早味現烤蛋糕', category:'food', emoji:'🍰', district:'단수이구', desc:'', mapUrl:'https://maps.app.goo.gl/Ckv8xLmwYSPPdWE47', lat:25.1690, lng:121.4410 },
+  // ── 숙소 ──
+  {id:'p1',name:'힐튼 호텔',category:'hotel',emoji:'🏨',district:'신반',desc:'첫날 묵을 호텔',mapUrl:'https://maps.app.goo.gl/QTxCEagG3aFuFQ7FA',lat:25.0145,lng:121.4637,images:['image/힐튼 호텔.jpeg']},
+  {id:'p2',name:'코지 호텔',category:'hotel',emoji:'🏨',district:'중산구',desc:'둘,셋째날 묵을 호텔',mapUrl:'https://maps.app.goo.gl/2amRk6TZx8ZgDRaPA',lat:25.0530,lng:121.5200,images:['image/코지 호텔.webp']},
+  // ── 교통 ──
+  {id:'p3',name:'타오위안 국제공항',category:'hotel',emoji:'✈️',district:'타오위안',desc:'전자 입출국 삼일전!!!',mapUrl:'https://maps.app.goo.gl/7k2Ldi21Rf7hEcNd9',lat:25.0777,lng:121.2325,images:['image/타오위안 국제공항.png']},
+  // ── 완화구 관광 ──
+  {id:'p4',name:'용산사',category:'sight',emoji:'🛕',district:'완화구',desc:'8세기 중반에 세워진 타이베이에서 가장 오래된 사찰로 불교, 도교, 민간신앙이 공존하며 관세음보살상이 영험하기로 유명함',mapUrl:'https://www.google.com/maps/search/?api=1&query=용산사+타이베이',lat:25.0372,lng:121.4999,images:['image/융산사.jpeg']},
+  {id:'p5',name:'보피라오 역사거리',category:'sight',emoji:'🏚️',district:'완화구',desc:"붉은 벽돌과 아치형 기둥이 이어지는 1930년대 '올드 타이베이' 정취를 간직한 과거 목재 무역의 중심지",mapUrl:'https://www.google.com/maps/search/?api=1&query=Bopiliao+Historic+Block+Taipei',lat:25.0390,lng:121.5005,images:['image/보피라오 역사거리.jpg']},
+  {id:'p6',name:'시먼딩',category:'sight',emoji:'🛒',district:'완화구',desc:"'타이베이의 명동'으로 불리는 젊은 문화와 패션, 먹거리의 중심지로 랜드마크인 '서문홍루'가 자리하고 있음",mapUrl:'https://www.google.com/maps/search/?api=1&query=Ximending+Taipei',lat:25.0420,lng:121.5080,images:['image/시먼딩.jpeg']},
+  // ── 중정구 관광 ──
+  {id:'p7',name:'국립 대만 박물관',category:'sight',emoji:'🏛️',district:'중정구',desc:'1908년 설립된 대만 최초의 국립 박물관으로 신고전주의 양식의 건물 안에서 대만의 역사와 자연사를 관람할 수 있음',mapUrl:'https://www.google.com/maps/search/?api=1&query=National+Taiwan+Museum',lat:25.0428,lng:121.5150,images:['image/국립 대만 박물관.jpeg']},
+  {id:'p8',name:'228 평화기념 공원',category:'sight',emoji:'🌳',district:'중정구',desc:'228 사건 희생자를 기리는 공원으로, 도심 속 평화로운 연못과 산책길이 어우러진 휴식처',mapUrl:'https://www.google.com/maps/search/?api=1&query=228+Peace+Memorial+Park+Taipei',lat:25.0418,lng:121.5150,images:['image/228 평화기념 공원.webp']},
+  {id:'p9',name:'대만 총통부',category:'sight',emoji:'🏛️',district:'중정구',desc:'일제강점기 총독부 청사로 지어진 행정 중심지로 평일 오전에 일부 구역이 일반에 개방됨',mapUrl:'https://www.google.com/maps/search/?api=1&query=Presidential+Office+Building+Taipei',lat:25.0400,lng:121.5120,images:['image/대만 총통부.jpeg']},
+  {id:'p10',name:'타이베이 식물원',category:'sight',emoji:'🌿',district:'중정구',desc:'2천 종 이상의 식물이 있는 도심 속 오아시스로 일본식 목조건물인 남먼딩 323과 연꽃 연못이 있음',mapUrl:'https://www.google.com/maps/search/?api=1&query=Taipei+Botanical+Garden',lat:25.0320,lng:121.5100,images:['image/타이베이 식물원.jpg']},
+  {id:'p11',name:'중정 기념당',category:'sight',emoji:'🏯',district:'중정구',desc:'장제스 전 총통을 추모하기 위해 세워진 역사적 랜드마크로 웅장한 아치와 푸른 지붕의 대리석 건물이 특징임',mapUrl:'https://www.google.com/maps/search/?api=1&query=Chiang+Kai-shek+Memorial+Hall',lat:25.0350,lng:121.5220,images:['image/중정 기념당.jpeg']},
+  // ── 다안구 관광 ──
+  {id:'p12',name:'융캉제',category:'sight',emoji:'🍽️',district:'다안구',desc:'딘타이펑 본점이 위치한 대표적인 미식거리로 전통 음식과 감각적인 카페, 편집샵이 공존함',mapUrl:'https://www.google.com/maps/search/?api=1&query=Yongkang+Street+Taipei',lat:25.0330,lng:121.5290,images:['image/융캉제.jpg']},
+  // ── 중산구 관광 ──
+  {id:'p13',name:'신트랜드',category:'sight',emoji:'🎮',district:'중산구',desc:"최신 디지털 기기와 게임, 피규어 등이 입점한 IT 중심 복합 쇼핑몰로 '타이베이의 아키하바라'로 불림",mapUrl:'https://www.google.com/maps/search/?api=1&query=Syntrend+Taipei',lat:25.0460,lng:121.5300,images:['image/신트랜드.jpeg']},
+  {id:'p14',name:'화산 1914 창의문화 원구',category:'sight',emoji:'🎨',district:'중산구',desc:'옛 양조장을 개조한 복합문화공간으로 빈티지한 벽돌 건물과 예술가들의 감성이 어우러진 포토스팟',mapUrl:'https://www.google.com/maps/search/?api=1&query=Huashan+1914+Creative+Park',lat:25.0445,lng:121.5290,images:['image/화산 1914 창의문화 원구.jpg']},
+  {id:'p15',name:'중산 선형 공원',category:'sight',emoji:'🌲',district:'중산구',desc:'도심 속 예술 작품과 상점이 어우러진 산책로이며, 인근 치펑제 골목은 젊은 층이 선호하는 트렌디한 거리임',mapUrl:'https://www.google.com/maps/search/?api=1&query=Zhongshan+Linear+Park+Taipei',lat:25.0525,lng:121.5280,images:['image/중산 선형 공원.jpeg']},
+  // ── 다퉁구 관광 ──
+  {id:'p16',name:'닝샤 야시장',category:'food',emoji:'🌙',district:'다퉁구',desc:'규모는 작지만 미슐랭 빕구르망 선정 노점이 있는 등 현지인들이 즐겨 찾는 알찬 미식 야시장',mapUrl:'https://www.google.com/maps/search/?api=1&query=Ningxia+Night+Market+Taipei',lat:25.0560,lng:121.5150,images:['image/닝샤 야시장.jpg']},
+  // ── 신이구 관광 ──
+  {id:'p17',name:'신이 쇼핑 거리',category:'sight',emoji:'🛍️',district:'신이구',desc:'백화점들이 스카이워크로 연결된 타이베이 최대 쇼핑 지구로 화려한 도시 라이프스타일의 중심지',mapUrl:'https://www.google.com/maps/search/?api=1&query=Xinyi+Shopping+District+Taipei',lat:25.0360,lng:121.5670,images:['image/신이 쇼핑 거리.webp']},
+  {id:'p18',name:'타이베이 101',category:'sight',emoji:'🏙️',district:'신이구',desc:'대나무 마디 모양의 독특한 외관을 가진 상징적 빌딩으로 89층과 91층에 전망대가 있음',mapUrl:'https://maps.app.goo.gl/hjYppKbWJZndz5jy6',lat:25.0340,lng:121.5645,images:['image/타이베이 101 .webp']},
+  {id:'p19',name:'스스남촌',category:'sight',emoji:'🏘️',district:'신이구',desc:'과거 군인 가족 거주지를 개조한 문화공간으로 현대적인 빌딩 숲 사이에서 빈티지한 대비를 이룸',mapUrl:'https://www.google.com/maps/search/?api=1&query=Four+Four+South+Village+Taipei',lat:25.0310,lng:121.5620,images:['image/스스남촌.jpeg']},
+  {id:'p20',name:'샹산역 (101타워)',category:'sight',emoji:'📸',district:'신이구',desc:'101타워를 산에서 보는 곳',mapUrl:'https://maps.app.goo.gl/KqVzTx5QTxKBh6Lv5',lat:25.0260,lng:121.5710,images:['image/샹산역 (101타워).jpeg']},
+  {id:'p21',name:'송인거리 (101타워)',category:'sight',emoji:'📸',district:'신이구',desc:'101타워를 길거리에서 보는 곳',mapUrl:'https://maps.app.goo.gl/ozEftrc2zMogu58g6',lat:25.0330,lng:121.5680,images:['image/송인거리 (101타워).webp']},
+  // ── 쑹산구 관광 ──
+  {id:'p22',name:'타이베이돔',category:'sight',emoji:'🏟️',district:'쑹산구',desc:'2023년 완공된 초대형 돔구장으로 경기장과 쇼핑몰, 레스토랑이 연결된 복합 엔터테인먼트 공간',mapUrl:'https://www.google.com/maps/search/?api=1&query=Taipei+Dome',lat:25.0510,lng:121.5700,images:['image/타이베이돔 .jpeg']},
+  {id:'p23',name:'숭산문화 창의 공원',category:'sight',emoji:'🎭',district:'쑹산구',desc:'옛 담배 공장을 리모델링하여 디자인 전시, 팝업 스토어, 카페 등이 들어선 예술적 휴식처',mapUrl:'https://www.google.com/maps/search/?api=1&query=Songshan+Cultural+Creative+Park',lat:25.0440,lng:121.5600,images:['image/숭산문화 창의 공원.jpeg']},
+  {id:'p24',name:'라오허제 야시장',category:'sight',emoji:'🌙',district:'쑹산구',desc:"타이베이에서 가장 오래된 야시장 중 하나로 입구의 '후초병(호자우빙)'이 명물임",mapUrl:'https://www.google.com/maps/search/?api=1&query=Raohe+Night+Market+Taipei',lat:25.0510,lng:121.5770,images:['image/라오허제 야시장 .jpeg']},
+  {id:'p25',name:'숭산 치유궁',category:'sight',emoji:'⛩️',district:'쑹산구',desc:'바다의 여신 마주를 모신 화려한 도교 사원으로 야시장 입구의 랜드마크 역할을 함',mapUrl:'https://www.google.com/maps/search/?api=1&query=Songshan+Ciyou+Temple',lat:25.0510,lng:121.5760,images:['image/숭산 치유궁.webp']},
+  // ── 스린구 관광 ──
+  {id:'p26',name:'스린 야시장',category:'food',emoji:'🌙',district:'스린구',desc:'100년 이상의 역사를 가진 타이베이 최대 야시장으로 대왕오징어, 굴전 등 온갖 길거리 음식이 모여 있음',mapUrl:'https://www.google.com/maps/search/?api=1&query=Shilin+Night+Market+Taipei',lat:25.0880,lng:121.5240,images:['image/스린 야시장.jpeg']},
+  {id:'p27',name:'국립 고궁 박물원',category:'sight',emoji:'🏛️',district:'스린구',desc:"아시아 최대 규모의 박물관으로 '취옥백채'와 '육형석' 등 진귀한 중국 황실 유물을 소장함",mapUrl:'https://www.google.com/maps/search/?api=1&query=National+Palace+Museum+Taipei',lat:25.1024,lng:121.5485,images:['image/국립 고궁 박물원.jpeg']},
+  // ── 단수이구 관광 ──
+  {id:'p28',name:'홍마오청/소백궁/진리대학교',category:'sight',emoji:'🏰',district:'단수이구',desc:'붉은 벽돌의 요새와 서양식 관저, 영화 촬영지로 유명한 캠퍼스가 어우러진 이국적인 노을 명소',mapUrl:'https://www.google.com/maps/search/?api=1&query=Fort+San+Domingo+Tamsui',lat:25.1750,lng:121.4325,images:['image/홍마오청:소백궁:진리대학교 .jpeg']},
+  // ── 신베이시 관광 ──
+  {id:'p29',name:'지우펀',category:'sight',emoji:'🏮',district:'신베이시',desc:'옛 금광 마을로 붉은 등불이 켜지는 좁은 골목길과 찻집이 영화 속 장면 같은 낭만적인 풍경을 선사함',mapUrl:'https://www.google.com/maps/search/?api=1&query=Jiufen+Taiwan',lat:25.1095,lng:121.8460,images:['image/지우펀.webp']},
+  // ── 신반 관광 ──
+  {id:'p30',name:'반챠오 난야 야시장',category:'food',emoji:'🌙',district:'신반',desc:'반차오 지역의 인기 야시장',mapUrl:'https://maps.app.goo.gl/QGJ4DcLPvL53oJ3A9',lat:25.0130,lng:121.4580,images:['image/반챠오 난야 야시장.jpg']},
+  // ── 먹거리 ──
+  {id:'p31',name:'品都串燒攤 (꼬치 맥주집)',category:'food',emoji:'🍢',district:'신반',desc:'첫날 꼬치 맥주집',mapUrl:'https://maps.app.goo.gl/1dWZSkrcT7tV5DcZA',lat:25.0140,lng:121.4630,images:['image/첫날 꼬치 맥주집 品都串燒攤.jpg']},
+  {id:'p32',name:'딘타이펑 (신반)',category:'food',emoji:'🥟',district:'신반',desc:'세계적으로 유명한 샤오롱바오 전문점',mapUrl:'https://maps.app.goo.gl/tuxswmWX4WaRCGQd9',lat:25.0150,lng:121.4640,images:['image/딘타이펑(신반).jpeg']},
+  {id:'p33',name:'緣味古早味現烤蛋糕 (스펀지 케이크)',category:'food',emoji:'🍰',district:'단수이구',desc:'단수이 명물 스펀지 케이크',mapUrl:'https://maps.app.goo.gl/Ckv8xLmwYSPPdWE47',lat:25.1720,lng:121.4380,images:['image/스펀지 케익 緣味古早味現烤蛋糕.jpeg']},
+  {id:'p34',name:'진천미',category:'food',emoji:'🍜',district:'완화구',desc:'현지인 맛집',mapUrl:'https://maps.app.goo.gl/41ew7G14UMgrGkHy8',lat:25.0380,lng:121.5000,images:['image/진천미.jpg']},
+  {id:'p35',name:'팔방운집 궈테 군만두',category:'food',emoji:'🥟',district:'신이구',desc:'유명 군만두 전문점',mapUrl:'https://www.google.com/maps/place/Ba+Fang+Yun+Ji+Dumpling/@25.0550599,121.5255828,17z',lat:25.0550599,lng:121.5255828,images:['image/팔방운집 궈테 군만두.jpeg']},
+  {id:'p36',name:'옌수지 튀김 (타이완)',category:'food',emoji:'🍗',district:'중산구',desc:'대만식 소금 바삭 튀김 치킨',mapUrl:'https://www.google.com/maps/place/%E5%8F%B0%E7%81%A3%E7%AC%AC%E4%B8%80%E5%AE%B6%E7%87%92%E7%83%A4%E9%B9%BD%E9%85%A5%E9%9B%9E/@25.0594813,121.5288503,17z',lat:25.0594813,lng:121.5288503,images:['image/옌수지 튀김 (타이완).jpg']},
+  {id:'p37',name:'옌수지 튀김 (쓰윈)',category:'food',emoji:'🍗',district:'완화구',desc:'시먼딩 근처 소금 바삭 튀김 치킨',mapUrl:'https://www.google.com/maps/place/Shi+Yun+Crispy+Salted+Fried+Chicken+(Ximen)/@25.0424871,121.5066831,17z',lat:25.0424871,lng:121.5066831,images:['image/옌수지 튀김 (쓰윈).jpg']},
+  {id:'p38',name:'츠펑 MZ 감성 거리',category:'sight',emoji:'🎨',district:'다퉁구',desc:'젊은 감성의 트렌디한 골목 거리',mapUrl:'https://www.google.com/maps/place/Chifeng+St,+Datong+District,+Taipei+City/@25.0553262,121.519628,17z',lat:25.0553262,lng:121.519628,images:['image/츠펑 MZ 감성거리.jpeg']},
 ];
 
 // ─── State ───
@@ -725,40 +832,7 @@ let state = {
   customPlaces: [],
   hiddenPlaces: [],
   placeEdits: {},
-  memos: { '0319':'', '0320':'', '0321':'', '0322':'', 'common':`19일 첫날, 목욜:
-👉고급호텔 체크인 (종환 13:30, 태원 14:30)
-👉딘타이펑 (15:00~16:00)
-👉시먼딩 투어 (16:00~18:00)
-👉호캉스 (19:00~21:00)
-👉신반 난양야시장 투어, 品都串燒攤 板橋 맥주 한잔 (21:30~22:30)
-👉호텔 복귀 및 취침 (23:00)
-
-20일 둘째날, 금욜:
-👉헬스 (7:00)
-👉힐튼 호텔 아점 (9:00)
-👉민솅 호텔 얼리 체크인 (10:00)
-👉타이베이 시내 관광 (10:00~18:00)
-시먼딩 근처 赤峰街 Chifeng St. : MZ 감성 (10:00~13:00)
-중간 호텔 복귀 재정비(가벼운 운동 복장)
-신의구 타이베이 101, 송인 및 샹산 (16:00~20:00)
-👉저녁 식사
-👉저녁 길거리 투어
-👉호텔 복귀 및 취침 (22:00)
-
-21일 셋째날, 토욜:
-👉헬스 (7:00)
-👉호텔 조식 (8:00)
-👉타이베이 시외 관광
-단수이(https://www.youtube.com/watch?v=KZnLhf8lZCk) 참고
-점심 흑전반점, 자전거 대여(1시간), 쓰린 야시장
-👉호텔 복귀
-
-22일 넷째날, 일욜:
-👉헬스 (6:00)
-👉호텔 조식 (7:00)
-👉카르푸 이니씨&가족들 선물사기 (9:00)
-👉공항 출발 (9:30)
-👉귀국 (종환 12:15, 태원 13:55)` }
+  memos: { '0319':'', '0320':'', '0321':'', '0322':'', 'common':'' }
 };
 
 function allPlaces() {
@@ -777,8 +851,8 @@ function findPlace(id) {
 function saveToUrl() {
   try {
     const json = JSON.stringify(state);
-    const encoded = btoa(unescape(encodeURIComponent(json)));
-    history.replaceState(null, '', '#' + encoded);
+    const compressed = LZString.compressToEncodedURIComponent(json);
+    history.replaceState(null, '', '#z' + compressed);
   } catch(e) { console.error('Save error', e); }
 }
 
@@ -786,6 +860,12 @@ function loadFromUrl() {
   const hash = location.hash.slice(1);
   if (!hash) return null;
   try {
+    // New lz-string format (prefixed with 'z')
+    if (hash.startsWith('z')) {
+      const json = LZString.decompressFromEncodedURIComponent(hash.slice(1));
+      return json ? JSON.parse(json) : null;
+    }
+    // Legacy Base64 format
     return JSON.parse(decodeURIComponent(escape(atob(hash))));
   } catch { return null; }
 }
@@ -801,7 +881,7 @@ function initState() {
   }
 }
 
-// ─── Taiwan Time ───
+// ─── 대만 시간 ───
 function updateTWTime() {
   const now = new Date();
   const tw = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
@@ -815,7 +895,7 @@ function copyLink() {
   saveToUrl();
   navigator.clipboard.writeText(location.href).then(() => {
     const btn = document.getElementById('btnCopy');
-    btn.textContent = '복사됨!';
+    btn.textContent = '복사 완료!';
     setTimeout(() => { btn.textContent = '링크 복사'; }, 2000);
   });
 }
@@ -843,7 +923,8 @@ document.querySelectorAll('.tab-bar button').forEach(btn => {
 // ─── Modal ───
 function openModal(html) {
   const overlay = document.getElementById('modalOverlay');
-  document.getElementById('modalSheet').innerHTML = '<div class="modal-handle"></div>' + html;
+  const handleBar = `<div class="modal-handle-bar" onclick="closeModal()"><span class="handle-line"></span><button class="modal-close-x" onclick="event.stopPropagation();closeModal()">✕</button></div>`;
+  document.getElementById('modalSheet').innerHTML = handleBar + html;
   requestAnimationFrame(() => overlay.classList.add('show'));
 }
 
@@ -863,7 +944,7 @@ function toggleDistMode() {
   distMode = !distMode;
   const btn = document.getElementById('distModeBtn');
   btn.classList.toggle('active', distMode);
-  btn.textContent = distMode ? '거리 측정 ON' : '거리 측정';
+  btn.textContent = distMode ? '거리측정 ON' : '거리측정';
   distPoints = [];
   if (distLine) { map.removeLayer(distLine); distLine = null; }
   document.getElementById('distanceBar').style.display = 'none';
@@ -878,15 +959,15 @@ function handleDistClick(latlng, placeName) {
     const dist = map.distance(a.latlng, b.latlng);
     let distStr = dist >= 1000 ? (dist/1000).toFixed(2) + ' km' : Math.round(dist) + ' m';
     if (distLine) map.removeLayer(distLine);
-    distLine = L.polyline([a.latlng, b.latlng], { color: '#e8312a', weight: 2, dashArray: '6,4' }).addTo(map);
+    distLine = L.polyline([a.latlng, b.latlng], { color: '#e07c4f', weight: 2, dashArray: '6,4' }).addTo(map);
     const bar = document.getElementById('distanceBar');
     bar.style.display = 'block';
-    bar.innerHTML = `<b>${a.name}</b> ↔ <b>${b.name}</b> : 직선 <b>${distStr}</b> <button onclick="clearDist()" style="margin-left:8px;border:none;background:none;color:var(--red);cursor:pointer;font-family:inherit">초기화</button>`;
+    bar.innerHTML = `<b>${a.name}</b> ↔ <b>${b.name}</b> : 직선 <b>${distStr}</b> <button onclick="clearDist()" style="margin-left:8px;border:none;background:none;color:var(--primary-dark);cursor:pointer;font-family:inherit">초기화</button>`;
     distPoints = [];
   } else {
     const bar = document.getElementById('distanceBar');
     bar.style.display = 'block';
-    bar.textContent = `${distPoints[0].name} 선택됨 — 두 번째 장소를 클릭하세요`;
+    bar.textContent = `${distPoints[0].name} 선택됨 — 두번째 장소를 클릭하세요`;
   }
 }
 
@@ -897,12 +978,12 @@ function clearDist() {
 }
 
 function initMap() {
-  map = L.map('map-container', { zoomControl: false }).setView([25.033, 121.565], 12);
+  map = L.map('map-container', { zoomControl: false }).setView([25.05, 121.52], 12);
   L.control.zoom({ position: 'topright' }).addTo(map);
-  L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=ko&x={x}&y={y}&z={z}', {
-    attribution: '&copy; Google Maps',
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
     maxZoom: 20,
-    subdomains: ['mt0','mt1','mt2','mt3']
+    subdomains: 'abcd'
   }).addTo(map);
 
   // Date buttons
@@ -925,7 +1006,7 @@ function initMap() {
   const distBtn = document.createElement('button');
   distBtn.id = 'distModeBtn';
   distBtn.className = 'dist-measure-btn';
-  distBtn.textContent = '거리 측정';
+  distBtn.textContent = '거리측정';
   distBtn.onclick = toggleDistMode;
   bar.appendChild(distBtn);
 }
@@ -960,7 +1041,6 @@ function updateMapMarkers() {
     const color = DATE_COLORS[date];
     const dayPoints = [];
 
-    // Gather schedule entries sorted by time slot
     const entries = [];
     TIME_SLOTS.forEach(slot => {
       const key = date + '_' + slot;
@@ -982,7 +1062,7 @@ function updateMapMarkers() {
           <div style="width:32px;height:32px;border-radius:50%;
             background:${color};border:2px solid #fff;
             display:flex;align-items:center;justify-content:center;
-            font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,.5);
+            font-size:14px;box-shadow:0 2px 10px rgba(0,0,0,.4);
           ">${place.emoji}</div>
           <div style="position:absolute;top:-6px;right:-6px;
             width:18px;height:18px;border-radius:50%;
@@ -998,12 +1078,16 @@ function updateMapMarkers() {
       });
 
       const marker = L.marker([place.lat, place.lng], { icon }).addTo(map);
+      const popupImgs = (place.images || []).slice(0,1).map(src =>
+        `<img src="${src}" style="width:100%;border-radius:4px;margin:6px 0" onerror="this.style.display='none'">`
+      ).join('');
       marker.bindPopup(`
         <div class="popup-title">${place.emoji} ${place.name}</div>
         <div style="color:var(--text-dim);font-size:11px;">${DATE_SHORT[date]} ${slot}</div>
         ${memo ? `<div style="margin-top:4px;font-size:11px;">${memo}</div>` : ''}
-        <a class="popup-gmaps" href="${place.mapUrl}" target="_blank">📍 구글맵 열기</a>
-      `);
+        ${popupImgs}
+        <a class="popup-gmaps" href="${place.mapUrl}" target="_blank">📍 지도 열기</a>
+      `, { maxWidth: 250 });
       marker.on('click', () => handleDistClick(L.latLng(place.lat, place.lng), place.name));
       mapMarkers.push(marker);
       dayPoints.push([place.lat, place.lng]);
@@ -1022,9 +1106,25 @@ function updateMapMarkers() {
 }
 
 // ─── SCHEDULE ───
+let scheduleZoom = 1;
+
+function setScheduleZoom(delta) {
+  scheduleZoom = Math.min(1.5, Math.max(0.4, scheduleZoom + delta));
+  const inner = document.getElementById('scheduleInner');
+  if (inner) inner.style.transform = `scale(${scheduleZoom})`;
+  const label = document.getElementById('zoomLabel');
+  if (label) label.textContent = Math.round(scheduleZoom * 100) + '%';
+}
+
 function renderSchedule() {
   const wrap = document.getElementById('scheduleWrap');
-  let html = '<table class="schedule-table"><thead><tr><th class="time-col">시간</th>';
+  let html = `<div class="schedule-zoom-bar">
+    <button onclick="event.stopPropagation();setScheduleZoom(-0.1)">−</button>
+    <span class="zoom-level" id="zoomLabel">${Math.round(scheduleZoom * 100)}%</span>
+    <button onclick="event.stopPropagation();setScheduleZoom(0.1)">+</button>
+  </div>`;
+  html += `<div class="schedule-inner" id="scheduleInner" style="transform:scale(${scheduleZoom})">`;
+  html += '<table class="schedule-table"><thead><tr><th class="time-col">시간</th>';
   DATES.forEach(d => {
     html += `<th><span class="day-date" style="color:${DATE_COLORS[d]}">${DATE_LABELS[d]}</span></th>`;
   });
@@ -1037,12 +1137,12 @@ function renderSchedule() {
     DATES.forEach(d => {
       const key = d + '_' + slot;
       const items = state.schedule[key] || [];
-      html += `<td class="${isHalf ? 'half-hour' : ''}" onclick="openPlacePicker('${key}')">`;
+      html += `<td class="${isHalf ? 'half-hour' : ''}" data-slot="${key}" onclick="openPlacePicker('${key}')">`;
       items.forEach((item, idx) => {
         const place = findPlace(item.placeId);
         if (place) {
           const catColor = CATEGORY_STYLE[place.category]?.color || '#888';
-          html += `<div class="sched-card" style="border-left-color:${catColor}" onclick="event.stopPropagation();openCardDetail('${key}',${idx})">
+          html += `<div class="sched-card" style="border-left-color:${catColor}" data-slot="${key}" data-idx="${idx}" onclick="event.stopPropagation();openCardDetail('${key}',${idx})">
             <span class="sc-emoji">${place.emoji}</span>
             <span class="sc-name">${place.name}</span>
             ${item.memo ? `<span class="sc-memo">${item.memo}</span>` : ''}
@@ -1054,8 +1154,10 @@ function renderSchedule() {
     html += '</tr>';
   });
 
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   wrap.innerHTML = html;
+  initScheduleDrag();
+  initSchedulePinch();
 }
 
 function openPlacePicker(slotKey) {
@@ -1073,10 +1175,10 @@ function openPlacePicker(slotKey) {
 
   const cats = [
     { key:'all', label:'전체' },
-    { key:'hotel', label:'🏨 숙소' },
-    { key:'food', label:'🍜 음식' },
+    { key:'hotel', label:'🏨 호텔·교통' },
+    { key:'food', label:'🍜 먹거리' },
     { key:'sight', label:'🗺️ 관광' },
-    { key:'transport', label:'🚇 교통' },
+    { key:'shopping', label:'🛍️ 쇼핑' },
   ];
 
   openModal(`
@@ -1117,15 +1219,34 @@ function openCardDetail(slotKey, idx) {
   const place = findPlace(item.placeId);
   if (!place) return;
 
+  const [curDate, curTime] = slotKey.split('_');
+  const curDateLabel = DATE_LABELS[curDate] || curDate;
+  const curTimeLabel = curTime.split(':')[0].padStart(2,'0') + ':' + curTime.split(':')[1];
+
   openModal(`
     <div class="card-detail-modal">
       <div class="cd-place"><span style="font-size:28px">${place.emoji}</span> ${place.name}</div>
       <div class="modal-field">
         <label>메모</label>
-        <input type="text" id="cdMemo" value="${item.memo || ''}" placeholder="메모 입력..." onchange="updateCardMemo('${slotKey}',${idx},this.value)">
+        <input type="text" id="cdMemo" value="${item.memo || ''}" placeholder="메모를 입력하세요..." onchange="updateCardMemo('${slotKey}',${idx},this.value)">
+      </div>
+      <div class="modal-field">
+        <label>현재 시간대: ${curDateLabel} ${curTimeLabel}</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <select id="moveDate" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px">
+            ${DATES.map(d => `<option value="${d}" ${d===curDate?'selected':''}>${DATE_LABELS[d]}</option>`).join('')}
+          </select>
+          <select id="moveTime" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:13px">
+            ${TIME_SLOTS.map(t => {
+              const tl = t.split(':')[0].padStart(2,'0')+':'+t.split(':')[1];
+              return `<option value="${t}" ${t===curTime?'selected':''}>${tl}</option>`;
+            }).join('')}
+          </select>
+        </div>
+        <button class="cd-action-btn" style="margin-top:8px;width:100%" onclick="moveScheduleItem('${slotKey}',${idx})">🔄 시간대 변경</button>
       </div>
       <div class="cd-actions">
-        <a class="cd-action-btn" href="${place.mapUrl}" target="_blank">📍 구글맵 열기</a>
+        <a class="cd-action-btn" href="${place.mapUrl}" target="_blank">📍 지도 열기</a>
         <button class="cd-action-btn danger" onclick="removeFromSchedule('${slotKey}',${idx})">🗑️ 삭제</button>
       </div>
     </div>
@@ -1139,6 +1260,22 @@ function updateCardMemo(slotKey, idx, memo) {
   }
 }
 
+function moveScheduleItem(slotKey, idx) {
+  const newDate = document.getElementById('moveDate').value;
+  const newTime = document.getElementById('moveTime').value;
+  const newKey = newDate + '_' + newTime;
+  if (newKey === slotKey) { closeModal(); return; }
+  const item = state.schedule[slotKey]?.[idx];
+  if (!item) return;
+  state.schedule[slotKey].splice(idx, 1);
+  if (state.schedule[slotKey].length === 0) delete state.schedule[slotKey];
+  if (!state.schedule[newKey]) state.schedule[newKey] = [];
+  state.schedule[newKey].push(item);
+  saveToUrl();
+  closeModal();
+  renderSchedule();
+}
+
 function removeFromSchedule(slotKey, idx) {
   if (state.schedule[slotKey]) {
     state.schedule[slotKey].splice(idx, 1);
@@ -1149,31 +1286,271 @@ function removeFromSchedule(slotKey, idx) {
   }
 }
 
+// ─── 길게 누르기 드래그 (Long-press Drag & Drop) ───
+let dragState = null;
+let longPressTimer = null;
+let _dragInited = false;
+
+function initScheduleDrag() {
+  if (_dragInited) return;
+  _dragInited = true;
+
+  document.addEventListener('mousedown', onDragMouseDown);
+  document.addEventListener('mousemove', onDragMouseMove);
+  document.addEventListener('mouseup', onDragMouseUp);
+  document.addEventListener('touchstart', onDragTouchStart, { passive: false });
+  document.addEventListener('touchmove', onDragTouchMove, { passive: false });
+  document.addEventListener('touchend', onDragTouchEnd);
+  document.addEventListener('touchcancel', onDragTouchEnd);
+}
+
+// ─── 핀치 줌 (Pinch-to-Zoom) ───
+let _pinchInited = false;
+let pinchStartDist = 0;
+let pinchStartZoom = 1;
+
+function initSchedulePinch() {
+  if (_pinchInited) return;
+  _pinchInited = true;
+
+  const wrap = document.getElementById('scheduleWrap');
+  if (!wrap) return;
+
+  wrap.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      pinchStartDist = getTouchDist(e.touches);
+      pinchStartZoom = scheduleZoom;
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const dist = getTouchDist(e.touches);
+      const ratio = dist / pinchStartDist;
+      scheduleZoom = Math.min(1.5, Math.max(0.4, pinchStartZoom * ratio));
+      const inner = document.getElementById('scheduleInner');
+      if (inner) inner.style.transform = `scale(${scheduleZoom})`;
+      const label = document.getElementById('zoomLabel');
+      if (label) label.textContent = Math.round(scheduleZoom * 100) + '%';
+    }
+  }, { passive: false });
+}
+
+function getTouchDist(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function isInSchedule(el) {
+  return !!el?.closest('#scheduleWrap');
+}
+
+function findSchedCard(el) {
+  while (el && !el.classList?.contains('sched-card')) el = el.parentElement;
+  return (el && isInSchedule(el)) ? el : null;
+}
+
+function findDropCell(x, y) {
+  if (dragState?.ghost) dragState.ghost.style.display = 'none';
+  const els = document.elementsFromPoint(x, y);
+  if (dragState?.ghost) dragState.ghost.style.display = '';
+  for (const el of els) {
+    if (el.tagName === 'TD' && el.dataset.slot) return el;
+  }
+  return null;
+}
+
+function createGhost(card) {
+  const ghost = document.createElement('div');
+  ghost.className = 'drag-ghost';
+  ghost.innerHTML = card.innerHTML;
+  ghost.style.borderLeftColor = card.style.borderLeftColor;
+  document.body.appendChild(ghost);
+  return ghost;
+}
+
+function startDrag(card, x, y) {
+  const slot = card.dataset.slot;
+  const idx = parseInt(card.dataset.idx);
+  const ghost = createGhost(card);
+  ghost.style.left = (x - 60) + 'px';
+  ghost.style.top = (y - 16) + 'px';
+  card.classList.add('dragging');
+  dragState = { ...dragState, ghost, slot, idx, started: true, didDrag: true };
+  if (navigator.vibrate) navigator.vibrate(30);
+}
+
+function moveDrag(x, y) {
+  if (!dragState?.started) return;
+  dragState.ghost.style.left = (x - 60) + 'px';
+  dragState.ghost.style.top = (y - 16) + 'px';
+
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  const cell = findDropCell(x, y);
+  if (cell) cell.classList.add('drag-over');
+}
+
+function endDrag(x, y) {
+  if (!dragState?.started) { cleanupDrag(); return; }
+
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  const cell = findDropCell(x, y);
+
+  if (cell) {
+    const targetSlot = cell.dataset.slot;
+    const sourceSlot = dragState.slot;
+    const sourceIdx = dragState.idx;
+    const item = state.schedule[sourceSlot]?.[sourceIdx];
+
+    if (item && (targetSlot !== sourceSlot)) {
+      state.schedule[sourceSlot].splice(sourceIdx, 1);
+      if (state.schedule[sourceSlot].length === 0) delete state.schedule[sourceSlot];
+      if (!state.schedule[targetSlot]) state.schedule[targetSlot] = [];
+      state.schedule[targetSlot].push(item);
+      saveToUrl();
+      renderSchedule();
+    }
+  }
+
+  cleanupDrag();
+}
+
+function cleanupDrag() {
+  clearTimeout(longPressTimer);
+  if (dragState) {
+    if (dragState.ghost) dragState.ghost.remove();
+    if (dragState.card) dragState.card.classList.remove('dragging');
+  }
+  dragState = null;
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+// Suppress click after drag
+let _suppressClick = false;
+document.addEventListener('click', function(e) {
+  if (_suppressClick) {
+    e.stopPropagation();
+    e.preventDefault();
+    _suppressClick = false;
+  }
+}, true);
+
+// Touch events
+function onDragTouchStart(e) {
+  const card = findSchedCard(e.target);
+  if (!card) return;
+  const touch = e.touches[0];
+  dragState = { card, slot: card.dataset.slot, idx: parseInt(card.dataset.idx), started: false, didDrag: false, startX: touch.clientX, startY: touch.clientY };
+  longPressTimer = setTimeout(() => {
+    startDrag(card, touch.clientX, touch.clientY);
+  }, 350);
+}
+
+function onDragTouchMove(e) {
+  if (!dragState) return;
+  const touch = e.touches[0];
+  if (!dragState.started) {
+    const dx = Math.abs(touch.clientX - dragState.startX);
+    const dy = Math.abs(touch.clientY - dragState.startY);
+    if (dx > 8 || dy > 8) { clearTimeout(longPressTimer); cleanupDrag(); }
+    return;
+  }
+  e.preventDefault();
+  moveDrag(touch.clientX, touch.clientY);
+}
+
+function onDragTouchEnd(e) {
+  clearTimeout(longPressTimer);
+  if (dragState?.started) {
+    e.preventDefault();
+    _suppressClick = true;
+    const touch = e.changedTouches[0];
+    endDrag(touch.clientX, touch.clientY);
+    setTimeout(() => { _suppressClick = false; }, 300);
+  } else {
+    cleanupDrag();
+  }
+}
+
+// Mouse events
+function onDragMouseDown(e) {
+  const card = findSchedCard(e.target);
+  if (!card) return;
+  e.preventDefault();
+  dragState = { card, slot: card.dataset.slot, idx: parseInt(card.dataset.idx), started: false, didDrag: false, startX: e.clientX, startY: e.clientY };
+  longPressTimer = setTimeout(() => {
+    startDrag(card, e.clientX, e.clientY);
+  }, 350);
+}
+
+function onDragMouseMove(e) {
+  if (!dragState) return;
+  if (!dragState.started) {
+    const dx = Math.abs(e.clientX - dragState.startX);
+    const dy = Math.abs(e.clientY - dragState.startY);
+    if (dx > 8 || dy > 8) { clearTimeout(longPressTimer); cleanupDrag(); }
+    return;
+  }
+  e.preventDefault();
+  moveDrag(e.clientX, e.clientY);
+}
+
+function onDragMouseUp(e) {
+  clearTimeout(longPressTimer);
+  if (dragState?.started) {
+    _suppressClick = true;
+    endDrag(e.clientX, e.clientY);
+    setTimeout(() => { _suppressClick = false; }, 300);
+  } else {
+    cleanupDrag();
+  }
+}
+
 // ─── PLACES ───
-let placesFilter = 'all';
+let filterDate = 'all', filterDistrict = 'all', filterCat = 'all';
 
 function renderPlaces() {
   const wrap = document.getElementById('placesWrap');
-  const cats = [
-    { key:'all', label:'전체' },
-    { key:'hotel', label:'🏨 숙소' },
-    { key:'food', label:'🍜 음식' },
-    { key:'sight', label:'🗺️ 관광' },
-    { key:'transport', label:'🚇 교통' },
+
+  const dateOpts = [
+    {key:'all',label:'전체'},
+    {key:'0319',label:'3/19'},{key:'0320',label:'3/20'},{key:'0321',label:'3/21'}
+  ];
+  const districtOpts = [
+    {key:'all',label:'전체'},
+    ...DISTRICT_ORDER.map(d => ({key:d,label:d}))
+  ];
+  const catOpts = [
+    {key:'all',label:'전체'},
+    {key:'hotel',label:'🏨 호텔·교통'},{key:'sight',label:'🗺️ 관광'},
+    {key:'food',label:'🍜 먹거리'},{key:'shopping',label:'🛍️ 쇼핑'},
   ];
 
-  const places = allPlaces().filter(p => placesFilter === 'all' || p.category === placesFilter);
-  // Sort by district order
+  let places = allPlaces();
+  if (filterDate !== 'all') places = places.filter(p => p.planDate === filterDate);
+  if (filterDistrict !== 'all') places = places.filter(p => p.district === filterDistrict);
+  if (filterCat !== 'all') places = places.filter(p => p.category === filterCat);
   places.sort((a, b) => {
     const ai = DISTRICT_ORDER.indexOf(a.district || '');
     const bi = DISTRICT_ORDER.indexOf(b.district || '');
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
   });
 
-  let html = '<div class="filter-bar">';
-  cats.forEach(c => {
-    html += `<button class="filter-btn${c.key===placesFilter?' active':''}" onclick="setPlacesFilter('${c.key}')">${c.label}</button>`;
-  });
+  let html = '';
+  // 일정 필터
+  html += '<div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">일정</div><div class="filter-bar">';
+  dateOpts.forEach(c => { html += `<button class="filter-btn${c.key===filterDate?' active':''}" onclick="setFilter('date','${c.key}')">${c.label}</button>`; });
+  html += '</div>';
+  // 지역 필터
+  html += '<div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">지역</div><div class="filter-bar">';
+  districtOpts.forEach(c => { html += `<button class="filter-btn${c.key===filterDistrict?' active':''}" onclick="setFilter('district','${c.key}')">${c.label}</button>`; });
+  html += '</div>';
+  // 분류 필터
+  html += '<div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">분류</div><div class="filter-bar" style="margin-bottom:8px">';
+  catOpts.forEach(c => { html += `<button class="filter-btn${c.key===filterCat?' active':''}" onclick="setFilter('cat','${c.key}')">${c.label}</button>`; });
   html += '</div>';
 
   let lastDistrict = null;
@@ -1181,23 +1558,21 @@ function renderPlaces() {
   places.forEach(p => {
     if (p.district && p.district !== lastDistrict) {
       if (lastDistrict !== null) html += '</div><div class="places-grid">';
-      html += `<div style="grid-column:1/-1;font-size:13px;font-weight:700;color:var(--red);padding:8px 0 2px;border-bottom:1px solid var(--border);margin-bottom:4px">${p.district}</div>`;
+      html += `<div style="grid-column:1/-1;font-size:13px;font-weight:700;color:var(--primary-dark);padding:8px 0 2px;border-bottom:1px solid var(--border);margin-bottom:4px">${p.district}</div>`;
       lastDistrict = p.district;
     }
     const cs = CATEGORY_STYLE[p.category] || { color:'#888', label:'기타' };
+    const dateLabel = DATE_SHORT[p.planDate] || '';
     html += `
-      <div class="place-card">
+      <div class="place-card" onclick="openPlaceDetail('${p.id}')" style="cursor:pointer">
         <div class="pc-top">
           <span class="pc-emoji">${p.emoji}</span>
           <span class="pc-name">${p.name}</span>
         </div>
-        ${p.desc ? `<div style="font-size:10px;color:var(--text-dim);line-height:1.4;margin:-2px 0 2px">${p.desc}</div>` : ''}
-        <span class="pc-cat" style="background:${cs.color}22;color:${cs.color}">${cs.label}</span>
-        <div class="pc-actions">
-          <a class="pc-btn" href="${p.mapUrl}" target="_blank" style="text-decoration:none">📍 지도</a>
-          <button class="pc-btn" onclick="openPlaceEditModal('${p.id}')">✏️ 편집</button>
-          <button class="pc-btn" onclick="openScheduleAddFromPlace('${p.id}')">📅 추가</button>
-          <button class="pc-btn danger" onclick="deletePlace('${p.id}')">🗑️</button>
+        ${p.desc ? `<div style="font-size:10px;color:var(--text-dim);line-height:1.4;margin:-2px 0 2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${p.desc}</div>` : ''}
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <span class="pc-cat" style="background:${cs.color}22;color:${cs.color}">${cs.label}</span>
+          ${dateLabel ? `<span class="pc-cat" style="background:#e07c4f22;color:#c4612e">${dateLabel}</span>` : ''}
         </div>
       </div>
     `;
@@ -1208,15 +1583,45 @@ function renderPlaces() {
   wrap.innerHTML = html;
 }
 
+// 장소 카드 클릭 → 상세 팝업
+function openPlaceDetail(id) {
+  const p = findPlace(id);
+  if (!p) return;
+  const cs = CATEGORY_STYLE[p.category] || { color:'#888', label:'기타' };
+  const imgs = (p.images || []).map(src =>
+    `<img src="${src}" style="width:100%;border-radius:8px;margin-bottom:8px" onerror="this.style.display='none'">`
+  ).join('');
+  openModal(`
+    <div class="card-detail-modal">
+      <div class="cd-place"><span style="font-size:28px">${p.emoji}</span> ${p.name}</div>
+      ${p.desc ? `<div style="font-size:13px;margin-bottom:12px;line-height:1.6">${p.desc}</div>` : ''}
+      ${imgs ? `<div style="margin-bottom:12px">${imgs}</div>` : ''}
+      <div class="cd-actions">
+        <a class="cd-action-btn" href="${p.mapUrl}" target="_blank">📍 지도 열기</a>
+        <button class="cd-action-btn" onclick="closeModal();openScheduleAddFromPlace('${p.id}')">📅 일정에 추가</button>
+        <button class="cd-action-btn" onclick="closeModal();openPlaceEditModal('${p.id}')">✏️ 편집</button>
+        <button class="cd-action-btn danger" onclick="deletePlace('${p.id}');closeModal()">🗑️ 삭제</button>
+      </div>
+    </div>
+  `);
+}
+
+function setFilter(type, val) {
+  if (type === 'date') filterDate = val;
+  if (type === 'district') filterDistrict = val;
+  if (type === 'cat') filterCat = val;
+  renderPlaces();
+}
+
 function setPlacesFilter(cat) {
-  placesFilter = cat;
+  filterCat = cat;
   renderPlaces();
 }
 
 function openScheduleAddFromPlace(placeId) {
   window._schedAddSelected = new Set();
   window._schedAddPlaceId = placeId;
-  let html = '<div class="modal-title">스케줄에 추가</div>';
+  let html = '<div class="modal-title">일정에 추가</div>';
   html += '<div style="font-size:12px;color:var(--text-dim);margin-bottom:12px;">시간대를 선택하세요 (복수 선택 가능)</div>';
   DATES.forEach(d => {
     html += `<div style="margin-bottom:8px;font-weight:700;color:${DATE_COLORS[d]};font-size:13px">${DATE_LABELS[d]}</div>`;
@@ -1267,57 +1672,70 @@ function openAddPlaceModal() {
     <div class="modal-title">새 장소 추가</div>
     <div class="modal-field">
       <label>장소 이름</label>
-      <input type="text" id="newPlaceName" placeholder="장소 이름 입력...">
+      <input type="text" id="newPlaceName" placeholder="장소 이름을 입력하세요...">
     </div>
     <div class="modal-field">
-      <label>카테고리</label>
+      <label>분류</label>
       <select id="newPlaceCat">
-        <option value="hotel">🏨 숙소</option>
-        <option value="food">🍜 음식</option>
+        <option value="hotel">🏨 호텔·교통</option>
+        <option value="food">🍜 먹거리</option>
         <option value="sight" selected>🗺️ 관광</option>
-        <option value="transport">🚇 교통</option>
+        <option value="shopping">🛍️ 쇼핑</option>
       </select>
     </div>
     <div class="modal-field">
-      <label>구 (지역)</label>
+      <label>지역</label>
       <input type="text" id="newPlaceDistrict" placeholder="예: 중산구, 신이구...">
     </div>
     <div class="modal-field">
-      <label>부가 설명 (선택)</label>
+      <label>설명 (선택)</label>
       <input type="text" id="newPlaceDesc" placeholder="장소에 대한 설명...">
     </div>
     <div class="modal-field">
-      <label>구글맵 링크 (비워두면 자동 생성)</label>
-      <input type="text" id="newPlaceUrl" placeholder="https://...">
+      <label>지도 링크 (Google Maps 링크를 붙여넣으면 좌표 자동 추출)</label>
+      <input type="text" id="newPlaceUrl" placeholder="Google Maps 링크 붙여넣기..." oninput="onMapUrlPaste('newPlaceLat','newPlaceLng')(event)">
     </div>
     <div class="modal-field">
-      <label>위도 (선택, 지도 표시용)</label>
-      <input type="number" step="any" id="newPlaceLat" placeholder="25.033">
+      <label>위도 (비워두면 자동 검색)</label>
+      <input type="number" step="any" id="newPlaceLat" placeholder="자동 검색">
     </div>
     <div class="modal-field">
-      <label>경도 (선택, 지도 표시용)</label>
-      <input type="number" step="any" id="newPlaceLng" placeholder="121.565">
+      <label>경도 (비워두면 자동 검색)</label>
+      <input type="number" step="any" id="newPlaceLng" placeholder="자동 검색">
     </div>
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeModal()">취소</button>
-      <button class="modal-btn primary" onclick="addCustomPlace()">추가</button>
+      <button class="modal-btn primary" id="addPlaceBtn" onclick="addCustomPlace().catch(e=>console.error(e))">추가</button>
     </div>
   `);
 }
 
-function addCustomPlace() {
+async function addCustomPlace() {
   const name = document.getElementById('newPlaceName').value.trim();
   if (!name) return;
+
+  const btn = document.getElementById('addPlaceBtn');
+  btn.disabled = true;
+  btn.textContent = '좌표 검색 중...';
+
   const cat = document.getElementById('newPlaceCat').value;
   const district = document.getElementById('newPlaceDistrict').value.trim();
   const desc = document.getElementById('newPlaceDesc').value.trim();
   const url = document.getElementById('newPlaceUrl').value.trim();
-  const lat = parseFloat(document.getElementById('newPlaceLat').value) || null;
-  const lng = parseFloat(document.getElementById('newPlaceLng').value) || null;
+  let lat = parseFloat(document.getElementById('newPlaceLat').value) || null;
+  let lng = parseFloat(document.getElementById('newPlaceLng').value) || null;
 
   const id = 'c' + Date.now();
   const emoji = CATEGORY_EMOJI[cat] || '📍';
-  const mapUrl = url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}+대만`;
+
+  if (!lat || !lng) {
+    try {
+      const coords = await geocodePlace(name, url);
+      if (coords) { lat = coords.lat; lng = coords.lng; }
+    } catch(e) { console.error('Geocode failed', e); }
+  }
+
+  const mapUrl = url || buildGoogleMapsUrl(name, lat, lng);
 
   state.customPlaces.push({ id, name, category: cat, emoji, district, desc, mapUrl, lat, lng });
   saveToUrl();
@@ -1325,43 +1743,148 @@ function addCustomPlace() {
   renderPlaces();
 }
 
+// Google Maps URL에서 경위도 추출
+function parseCoordsFromUrl(url) {
+  if (!url) return null;
+  let m = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  m = url.match(/!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  m = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  m = url.match(/[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  return null;
+}
+
+// 좌표 검색: 1) Google Maps URL 파싱 → 2) 대만 범위 한정 Nominatim 검색
+async function geocodePlace(name, mapUrlInput) {
+  if (mapUrlInput) {
+    const parsed = parseCoordsFromUrl(mapUrlInput);
+    if (parsed) return parsed;
+  }
+  const queries = [
+    name + ' Taipei Taiwan',
+    name + ' 台北',
+    name,
+  ];
+  for (const query of queries) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&viewbox=${TW_VIEWBOX}&bounded=1&limit=3`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'zh-TW' } });
+      const data = await res.json();
+      const tw = data.filter(r => {
+        const lat = parseFloat(r.lat), lon = parseFloat(r.lon);
+        return lat >= 24.5 && lat <= 25.5 && lon >= 121.0 && lon <= 122.0;
+      });
+      if (tw.length > 0) {
+        return { lat: parseFloat(tw[0].lat), lng: parseFloat(tw[0].lon) };
+      }
+    } catch(e) { console.error('Geocode error', e); }
+  }
+  return null;
+}
+
+// 좌표가 포함된 Google Maps URL 생성
+function buildGoogleMapsUrl(name, lat, lng) {
+  if (lat && lng) {
+    return `https://www.google.com/maps/place/${encodeURIComponent(name)}/@${lat},${lng},17z`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' Taipei')}`;
+}
+
+// Google Maps URL 붙여넣기 시 자동으로 경위도 추출
+function onMapUrlPaste(latFieldId, lngFieldId) {
+  return function(e) {
+    setTimeout(() => {
+      const url = e.target.value;
+      const coords = parseCoordsFromUrl(url);
+      if (coords) {
+        document.getElementById(latFieldId).value = coords.lat;
+        document.getElementById(lngFieldId).value = coords.lng;
+      }
+    }, 100);
+  };
+}
+
 function openPlaceEditModal(id) {
   const place = findPlace(id);
   if (!place) return;
+  const nameEscaped = (place.name || '').replace(/"/g, '&quot;');
   const descEscaped = (place.desc || '').replace(/"/g, '&quot;');
   const urlEscaped = (place.mapUrl || '').replace(/"/g, '&quot;');
+  const districtEscaped = (place.district || '').replace(/"/g, '&quot;');
   openModal(`
     <div class="modal-title">장소 편집</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:16px;font-weight:700">
-      <span style="font-size:24px">${place.emoji}</span> ${place.name}
+    <div class="modal-field">
+      <label>장소 이름</label>
+      <input type="text" id="editPlaceName" value="${nameEscaped}" placeholder="장소 이름...">
     </div>
     <div class="modal-field">
-      <label>부가 설명</label>
+      <label>분류</label>
+      <select id="editPlaceCat">
+        <option value="hotel" ${place.category==='hotel'?'selected':''}>🏨 호텔·교통</option>
+        <option value="food" ${place.category==='food'?'selected':''}>🍜 먹거리</option>
+        <option value="sight" ${place.category==='sight'?'selected':''}>🗺️ 관광</option>
+        <option value="shopping" ${place.category==='shopping'?'selected':''}>🛍️ 쇼핑</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>지역</label>
+      <input type="text" id="editPlaceDistrict" value="${districtEscaped}" placeholder="예: 중산구, 신이구...">
+    </div>
+    <div class="modal-field">
+      <label>설명</label>
       <input type="text" id="editPlaceDesc" value="${descEscaped}" placeholder="장소에 대한 설명...">
     </div>
     <div class="modal-field">
-      <label>구글맵 링크</label>
-      <input type="text" id="editPlaceUrl" value="${urlEscaped}" placeholder="https://...">
+      <label>지도 링크 (Google Maps 링크를 붙여넣으면 좌표 자동 추출)</label>
+      <input type="text" id="editPlaceUrl" value="${urlEscaped}" placeholder="Google Maps 링크 붙여넣기..." oninput="onMapUrlPaste('editPlaceLat','editPlaceLng')(event)">
+    </div>
+    <div class="modal-field">
+      <label>위도 (비워두면 자동 검색)</label>
+      <input type="number" step="any" id="editPlaceLat" value="${place.lat||''}" placeholder="자동 검색">
+    </div>
+    <div class="modal-field">
+      <label>경도 (비워두면 자동 검색)</label>
+      <input type="number" step="any" id="editPlaceLng" value="${place.lng||''}" placeholder="자동 검색">
     </div>
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeModal()">취소</button>
-      <button class="modal-btn primary" onclick="savePlaceEdit('${id}')">저장</button>
+      <button class="modal-btn primary" onclick="savePlaceEdit('${id}').catch(e=>console.error(e))">저장</button>
     </div>
   `);
 }
 
-function savePlaceEdit(id) {
+async function savePlaceEdit(id) {
+  const name = document.getElementById('editPlaceName').value.trim();
+  const category = document.getElementById('editPlaceCat').value;
+  const district = document.getElementById('editPlaceDistrict').value.trim();
   const desc = document.getElementById('editPlaceDesc').value.trim();
   const mapUrl = document.getElementById('editPlaceUrl').value.trim();
+  let lat = parseFloat(document.getElementById('editPlaceLat').value) || null;
+  let lng = parseFloat(document.getElementById('editPlaceLng').value) || null;
+  const emoji = CATEGORY_EMOJI[category] || '📍';
+
+  if (!lat || !lng) {
+    try {
+      const coords = await geocodePlace(name, mapUrl);
+      if (coords) { lat = coords.lat; lng = coords.lng; }
+    } catch(e) { console.error('Geocode failed', e); }
+  }
+
+  const finalMapUrl = mapUrl || buildGoogleMapsUrl(name, lat, lng);
+
   if (id.startsWith('c')) {
     const cp = state.customPlaces.find(p => p.id === id);
     if (cp) {
-      cp.desc = desc;
-      if (mapUrl) cp.mapUrl = mapUrl;
+      cp.name = name; cp.category = category; cp.emoji = emoji;
+      cp.district = district; cp.desc = desc; cp.mapUrl = finalMapUrl;
+      cp.lat = lat; cp.lng = lng;
     }
   } else {
     if (!state.placeEdits) state.placeEdits = {};
-    state.placeEdits[id] = { desc, ...(mapUrl ? { mapUrl } : {}) };
+    state.placeEdits[id] = { name, category, emoji, district, desc, mapUrl: finalMapUrl, lat, lng };
   }
   saveToUrl();
   closeModal();
@@ -1375,7 +1898,6 @@ function deletePlace(id) {
     if (!state.hiddenPlaces) state.hiddenPlaces = [];
     if (!state.hiddenPlaces.includes(id)) state.hiddenPlaces.push(id);
   }
-  // Remove from schedule too
   Object.keys(state.schedule).forEach(key => {
     state.schedule[key] = state.schedule[key].filter(item => item.placeId !== id);
     if (state.schedule[key].length === 0) delete state.schedule[key];
@@ -1390,7 +1912,7 @@ let memoTab = 'common';
 function renderMemo() {
   const wrap = document.getElementById('memoWrap');
   const tabs = ['common', ...DATES];
-  const tabLabels = { ...DATE_SHORT, common: '기존' };
+  const tabLabels = { ...DATE_SHORT, common: '공통' };
 
   let html = '<div class="memo-date-bar">';
   tabs.forEach(t => {
