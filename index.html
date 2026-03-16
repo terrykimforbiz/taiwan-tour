@@ -697,6 +697,120 @@ nav.tab-bar button.active::before {
 .modal-filter-bar {
   display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; flex-wrap: nowrap;
 }
+
+/* ── Exchange tab ── */
+.exchange-wrap {
+  padding: 16px 12px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.exchange-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  box-shadow: 0 1px 6px rgba(224,124,79,.08);
+  margin-bottom: 12px;
+}
+.exchange-rate-info {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.exchange-rate-info b { color: var(--primary-dark); font-size: 14px; }
+.exchange-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.exchange-input-group label {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 50px;
+  color: var(--text);
+}
+.exchange-input-group input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  outline: none;
+  background: var(--bg);
+  text-align: right;
+}
+.exchange-input-group input:focus { border-color: var(--primary); }
+.exchange-input-group .unit {
+  font-size: 13px;
+  color: var(--text-dim);
+  min-width: 24px;
+}
+.exchange-arrow {
+  text-align: center;
+  font-size: 20px;
+  margin: 4px 0;
+  color: var(--primary);
+}
+.exchange-result {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  padding: 8px 0;
+  word-break: break-all;
+}
+.exchange-result .result-unit { font-size: 14px; color: var(--text-dim); font-weight: 400; }
+.quick-amounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.quick-amounts .section-label {
+  width: 100%;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+.quick-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 10px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+  color: var(--text);
+}
+.quick-btn:active { transform: scale(.96); }
+.quick-btn:hover { border-color: var(--primary); color: var(--primary); }
+.quick-btn .qb-twd { font-weight: 700; font-size: 14px; display: block; }
+.quick-btn .qb-krw { font-size: 11px; color: var(--text-dim); display: block; margin-top: 2px; }
+.exchange-update-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.exchange-update-btn:hover { border-color: var(--primary); color: var(--primary); }
 </style>
 </head>
 <body>
@@ -731,12 +845,18 @@ nav.tab-bar button.active::before {
   <div class="memo-wrap" id="memoWrap"></div>
 </div>
 
+<!-- Exchange -->
+<div class="tab-content" id="tab-exchange">
+  <div class="exchange-wrap" id="exchangeWrap"></div>
+</div>
+
 <!-- Tab bar -->
 <nav class="tab-bar">
   <button class="active" data-tab="tab-map"><span class="tab-icon">🗺️</span>지도</button>
   <button data-tab="tab-schedule"><span class="tab-icon">📅</span>일정</button>
   <button data-tab="tab-places"><span class="tab-icon">📍</span>장소</button>
   <button data-tab="tab-memo"><span class="tab-icon">📝</span>메모</button>
+  <button data-tab="tab-exchange"><span class="tab-icon">💱</span>환율</button>
 </nav>
 
 <!-- Modal container -->
@@ -917,6 +1037,7 @@ document.querySelectorAll('.tab-bar button').forEach(btn => {
     if (tabId === 'tab-schedule') renderSchedule();
     if (tabId === 'tab-places') renderPlaces();
     if (tabId === 'tab-memo') renderMemo();
+    if (tabId === 'tab-exchange') renderExchange();
   });
 });
 
@@ -1933,6 +2054,73 @@ function saveMemo() {
   saveToUrl();
 }
 
+// ─── EXCHANGE ───
+let exchangeRate = 45.5; // 기본 환율: 1 TWD ≈ 45.5 KRW
+let exchangeRateDate = '';
+
+async function fetchExchangeRate() {
+  try {
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/TWD');
+    const data = await res.json();
+    if (data && data.rates && data.rates.KRW) {
+      exchangeRate = data.rates.KRW;
+      exchangeRateDate = data.date || '';
+      renderExchange();
+    }
+  } catch(e) {
+    console.error('환율 조회 실패, 기본값 사용:', e);
+  }
+}
+
+function twdToKrw(twd) {
+  return Math.round(twd * exchangeRate);
+}
+
+function formatKRW(num) {
+  return num.toLocaleString('ko-KR');
+}
+
+function renderExchange() {
+  const wrap = document.getElementById('exchangeWrap');
+  const quickAmounts = [10, 50, 100, 200, 500, 1000];
+
+  wrap.innerHTML = `
+    <div class="exchange-card">
+      <div class="exchange-rate-info">
+        현재 환율: <b>1 TWD = ${exchangeRate.toFixed(1)} KRW</b>
+        ${exchangeRateDate ? `<br><span style="font-size:10px">업데이트: ${exchangeRateDate}</span>` : ''}
+      </div>
+      <div class="exchange-input-group">
+        <label>🇹🇼 TWD</label>
+        <input type="number" id="twdInput" inputmode="decimal" placeholder="0" oninput="calcExchange()">
+        <span class="unit">元</span>
+      </div>
+      <div class="exchange-arrow">↓</div>
+      <div class="exchange-result" id="krwResult">
+        0 <span class="result-unit">원 (KRW)</span>
+      </div>
+      <button class="exchange-update-btn" onclick="fetchExchangeRate()">🔄 최신 환율 가져오기</button>
+    </div>
+    <div class="exchange-card">
+      <div class="quick-amounts">
+        <div class="section-label">자주 쓰는 금액</div>
+        ${quickAmounts.map(a => `
+          <button class="quick-btn" onclick="document.getElementById('twdInput').value=${a};calcExchange()">
+            <span class="qb-twd">${a} 元</span>
+            <span class="qb-krw">≈ ${formatKRW(twdToKrw(a))}원</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function calcExchange() {
+  const val = parseFloat(document.getElementById('twdInput').value) || 0;
+  const krw = twdToKrw(val);
+  document.getElementById('krwResult').innerHTML = `${formatKRW(krw)} <span class="result-unit">원 (KRW)</span>`;
+}
+
 // ─── Init ───
 initState();
 updateTWTime();
@@ -1942,6 +2130,8 @@ updateMapMarkers();
 renderSchedule();
 renderPlaces();
 renderMemo();
+renderExchange();
+fetchExchangeRate();
 </script>
 </body>
 </html>
